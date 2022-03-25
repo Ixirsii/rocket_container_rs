@@ -4,14 +4,9 @@
 #![warn(missing_docs)]
 #![deny(rustdoc::missing_crate_level_docs)]
 
-use std::collections::HashMap;
-
 mod repository;
 mod types;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let resp =
-        reqwest::blocking::get("https://httpbin.org/ip")?.json::<HashMap<String, String>>()?;
-    println!("{:#?}", resp);
-    Ok(())
+fn main() {
+    println!("Hello world!");
 }

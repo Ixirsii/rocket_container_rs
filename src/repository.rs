@@ -7,10 +7,11 @@
 extern crate reqwest;
 
 use crate::types::{AssetType, VideoType};
-use backoff::{retry, Error, ExponentialBackoff};
-use reqwest::blocking::{Client, RequestBuilder};
+use reqwest::{Client, RequestBuilder, Response, StatusCode};
 use serde::{Deserialize, Serialize};
 use std::borrow::Borrow;
+use std::cmp::min;
+use std::future::Future;
 
 /* ***************************************** Constants ****************************************** */
 
@@ -73,7 +74,7 @@ pub struct Image {
 }
 
 /// Alias for [core::result::Result] where the error type is always [Error]<[reqwest::Error]>.
-pub type Result<T> = core::result::Result<T, Error<reqwest::Error>>;
+pub type Result<T> = core::result::Result<T, reqwest::Error>;
 
 /// Video data returned from Rocket Video service.
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -159,18 +160,18 @@ struct Videos {
 ///
 /// ```rust
 /// use crate::repository::list_advertisements;
-/// use reqwest::blocking::Client;
+/// use reqwest::Client;
 ///
 /// fn main() {
 ///     let client = Client::new();
 ///
-///     match list_advertisements(&client) {
+///     match list_all_advertisements(&client) {
 ///         Ok(advertisements) => println!("Got advertisements: {:?}", advertisements),
 ///         Err(_) => println!("Failed to get advertisements"),
 ///     };
 /// }
 /// ```
-pub fn list_advertisements(client: &Client) -> Result<Vec<Advertisement>> {
+pub fn list_all_advertisements(client: &Client) -> Result<Vec<Advertisement>> {
     get::<Advertisement, Advertisements, ()>(client, ADVERTISEMENT_ENDPOINT, None)
 }
 
@@ -180,7 +181,7 @@ pub fn list_advertisements(client: &Client) -> Result<Vec<Advertisement>> {
 ///
 /// ```rust
 /// use crate::repository::list_advertisements;
-/// use reqwest::blocking::Client;
+/// use reqwest::Client;
 ///
 /// fn main() {
 ///     let client = Client::new();
@@ -192,7 +193,7 @@ pub fn list_advertisements(client: &Client) -> Result<Vec<Advertisement>> {
 ///     };
 /// }
 /// ```
-pub fn list_advertisement(client: &Client, container_id: u32) -> Result<Vec<Advertisement>> {
+pub fn list_advertisements(client: &Client, container_id: u32) -> Result<Vec<Advertisement>> {
     get::<Advertisement, Advertisements, [(&str, u32); 1]>(
         client,
         ADVERTISEMENT_ENDPOINT,
@@ -205,7 +206,7 @@ pub fn list_advertisement(client: &Client, container_id: u32) -> Result<Vec<Adve
 /// # Examples
 ///
 /// ```rust
-/// use reqwest::blocking::Client;
+/// use reqwest::Client;
 /// use serde::{Deserialize, Serialize};
 ///
 /// #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -247,23 +248,49 @@ where
     W: Wrapper<T> + for<'de> Deserialize<'de>,
     Q: Serialize,
 {
-    let op = || {
+    let op = || async {
         let mut request_builder: RequestBuilder = client.get(endpoint);
 
         if query.is_some() {
             request_builder = request_builder.query(query.borrow());
         }
 
-        let result: Vec<T> = request_builder
-            .send()?
+        let response: Response = match request_builder.send().await {
+            Ok(response) => {
+                if response.status() == StatusCode::OK {
+                    response
+                } else {
+                    return Err();
+                }
+            }
+            Err(err) => return Err(err),
+        };
+
+        let result: Vec<T> = response
             .json::<W>()
+            .await
             .map_err(Error::Permanent)?
             .unwrap();
 
         Ok(result)
     };
+}
 
-    retry(ExponentialBackoff::default(), op)
+fn retry<I, E, Fn, Fut>(operation: Fn) -> Result<I>
+where
+    Fn: FnMut() -> Fut,
+    Fut: Future<Output = Result<I>>,
+{
+    for i in 0..MAX_ATTEMPTS {}
+}
+
+fn get_backoff(attempt: u32) -> u64 {
+    const BASE: u64 = 2;
+    let exponential_backoff: u64 = BASE.pow(attempt);
+    let random_number_milliseconds: u64;
+    let backoff: u64 = exponential_backoff + random_number_milliseconds;
+
+    min(backoff, MAX_BACKOFF)
 }
 
 /* ************************************** Implementations *************************************** */
@@ -290,13 +317,52 @@ impl Wrapper<Video> for Videos {
 
 #[cfg(test)]
 mod test {
-    use super::{Advertisement, Advertisements, AssetReference, Image, Images, Video, Videos};
-    use crate::types::VideoType;
+    use super::{
+        list_advertisements, list_all_advertisements, Advertisement, Advertisements,
+        AssetReference, Image, Images, Result, Video, Videos,
+    };
+    use crate::types::{AssetType, VideoType};
+    use reqwest::Client;
+
+    /* ******************************** list_advertisements ********************************* */
+
+    #[test]
+    fn test_list_advertisements() {
+        // Given
+        let client: Client = Client::new();
+        let container_id: u32 = 0;
+
+        // When
+        let result: Result<Vec<Advertisement>> = list_advertisements(&client, container_id);
+
+        // Then
+        match result {
+            Ok(advertisements) => assert!(!advertisements.is_empty()),
+            Err(err) => panic!("Failed to list all advertisements with error: {:?}", err),
+        }
+    }
+
+    #[test]
+    fn test_list_all_advertisements() {
+        // Given
+        let client: Client = Client::new();
+
+        // When
+        let result: Result<Vec<Advertisement>> = list_all_advertisements(&client);
+
+        // Then
+        match result {
+            Ok(advertisements) => assert!(!advertisements.is_empty()),
+            Err(err) => panic!("Failed to list all advertisements with error: {:?}", err),
+        }
+    }
+
+    /* ******************************* Deserialization tests ******************************** */
 
     #[test]
     fn deserialize_advertisement() {
         // Given
-        let data = r#"
+        let data: &str = r#"
             {
                 "containerId": 0,
                 "id": 0,
@@ -305,7 +371,7 @@ mod test {
             }
         "#;
 
-        let expected = Advertisement {
+        let expected: Advertisement = Advertisement {
             container_id: 0,
             id: 0,
             name: "Advertisement".to_string(),
@@ -313,11 +379,11 @@ mod test {
         };
 
         // When
-        let actual: serde_json::Result<Advertisement> = serde_json::from_str(data);
+        let result: serde_json::Result<Advertisement> = serde_json::from_str(data);
 
         // Then
-        match actual {
-            Ok(advertisement) => assert_eq!(advertisement, expected),
+        match result {
+            Ok(actual) => assert_eq!(actual, expected),
             Err(err) => panic!("Failed to deserialize with error: {:?}", err),
         }
     }
@@ -325,7 +391,7 @@ mod test {
     #[test]
     fn deserialize_advertisements() {
         // Given
-        let data = r#"
+        let data: &str = r#"
             {
                 "advertisements": [
                     {
@@ -338,8 +404,8 @@ mod test {
             }
         "#;
 
-        let expected = Advertisements {
-            advertisements: Vec::<Advertisement>::from([Advertisement {
+        let expected: Advertisements = Advertisements {
+            advertisements: Vec::from([Advertisement {
                 container_id: 0,
                 id: 0,
                 name: "Advertisement".to_string(),
@@ -348,11 +414,38 @@ mod test {
         };
 
         // When
-        let actual: serde_json::Result<Advertisements> = serde_json::from_str(data);
+        let result: serde_json::Result<Advertisements> = serde_json::from_str(data);
 
         // Then
-        match actual {
-            Ok(advertisement) => assert_eq!(advertisement, expected),
+        match result {
+            Ok(actual) => assert_eq!(actual, expected),
+            Err(err) => panic!("Failed to deserialize with error: {:?}", err),
+        }
+    }
+
+    #[test]
+    fn deserialize_asset_reference() {
+        // Given
+        let data: &str = r#"
+            {
+                "assetId": 0,
+                "assetType": "AD",
+                "videoId": 0
+            }
+        "#;
+
+        let expected: AssetReference = AssetReference {
+            asset_id: 0,
+            asset_type: AssetType::AD,
+            video_id: 0,
+        };
+
+        // When
+        let result: serde_json::Result<AssetReference> = serde_json::from_str(data);
+
+        // Then
+        match result {
+            Ok(actual) => assert_eq!(actual, expected),
             Err(err) => panic!("Failed to deserialize with error: {:?}", err),
         }
     }
@@ -360,7 +453,7 @@ mod test {
     #[test]
     fn deserialize_image() {
         // Given
-        let data = r#"
+        let data: &str = r#"
             {
                 "containerId": 0,
                 "id": 0,
@@ -369,7 +462,7 @@ mod test {
             }
         "#;
 
-        let expected = Image {
+        let expected: Image = Image {
             container_id: 0,
             id: 0,
             name: "Image".to_string(),
@@ -377,11 +470,11 @@ mod test {
         };
 
         // When
-        let actual: serde_json::Result<Image> = serde_json::from_str(data);
+        let result: serde_json::Result<Image> = serde_json::from_str(data);
 
         // Then
-        match actual {
-            Ok(advertisement) => assert_eq!(advertisement, expected),
+        match result {
+            Ok(actual) => assert_eq!(actual, expected),
             Err(err) => panic!("Failed to deserialize with error: {:?}", err),
         }
     }
@@ -389,7 +482,7 @@ mod test {
     #[test]
     fn deserialize_images() {
         // Given
-        let data = r#"
+        let data: &str = r#"
             {
                 "images": [
                     {
@@ -402,8 +495,8 @@ mod test {
             }
         "#;
 
-        let expected = Images {
-            images: Vec::<Image>::from([Image {
+        let expected: Images = Images {
+            images: Vec::from([Image {
                 container_id: 0,
                 id: 0,
                 name: "Image".to_string(),
@@ -412,11 +505,11 @@ mod test {
         };
 
         // When
-        let actual: serde_json::Result<Images> = serde_json::from_str(data);
+        let result: serde_json::Result<Images> = serde_json::from_str(data);
 
         // Then
-        match actual {
-            Ok(advertisement) => assert_eq!(advertisement, expected),
+        match result {
+            Ok(actual) => assert_eq!(actual, expected),
             Err(err) => panic!("Failed to deserialize with error: {:?}", err),
         }
     }
@@ -424,7 +517,7 @@ mod test {
     #[test]
     fn deserialize_video() {
         // Given
-        let data = r#"
+        let data: &str = r#"
             {
                 "containerId": 0,
                 "description": "A short video clip",
@@ -436,7 +529,7 @@ mod test {
             }
         "#;
 
-        let expected = Video {
+        let expected: Video = Video {
             container_id: 0,
             description: "A short video clip".to_string(),
             expiration_date: "2022-03-23".to_string(),
@@ -447,11 +540,11 @@ mod test {
         };
 
         // When
-        let actual: serde_json::Result<Video> = serde_json::from_str(data);
+        let result: serde_json::Result<Video> = serde_json::from_str(data);
 
         // Then
-        match actual {
-            Ok(advertisement) => assert_eq!(advertisement, expected),
+        match result {
+            Ok(actual) => assert_eq!(actual, expected),
             Err(err) => panic!("Failed to deserialize with error: {:?}", err),
         }
     }
@@ -459,7 +552,7 @@ mod test {
     #[test]
     fn deserialize_videos() {
         // Given
-        let data = r#"
+        let data: &str = r#"
             {
                 "videos": [
                     {
@@ -475,8 +568,8 @@ mod test {
             }
         "#;
 
-        let expected = Videos {
-            videos: Vec::<Video>::from([Video {
+        let expected: Videos = Videos {
+            videos: Vec::from([Video {
                 container_id: 0,
                 description: "A short video clip".to_string(),
                 expiration_date: "2022-03-23".to_string(),
@@ -488,11 +581,215 @@ mod test {
         };
 
         // When
-        let actual: serde_json::Result<Videos> = serde_json::from_str(data);
+        let result: serde_json::Result<Videos> = serde_json::from_str(data);
 
         // Then
-        match actual {
-            Ok(advertisement) => assert_eq!(advertisement, expected),
+        match result {
+            Ok(actual) => assert_eq!(actual, expected),
+            Err(err) => panic!("Failed to deserialize with error: {:?}", err),
+        }
+    }
+
+    /* ******************************** Serialization tests ********************************* */
+
+    #[test]
+    fn serialize_advertisement() {
+        // Given
+        let data: Advertisement = Advertisement {
+            container_id: 0,
+            id: 0,
+            name: "Advertisement".to_string(),
+            url: "https://advertisement.com".to_string(),
+        };
+
+        let expected: &str =
+            r#"{"containerId":0,"id":0,"name":"Advertisement","url":"https://advertisement.com"}"#;
+
+        // When
+        let result: serde_json::Result<String> = serde_json::to_string(&data);
+
+        // Then
+        match result {
+            Ok(actual) => assert_eq!(actual, expected),
+            Err(err) => panic!("Failed to deserialize with error: {:?}", err),
+        }
+    }
+
+    #[test]
+    fn serialize_advertisements() {
+        // Given
+        let data: Advertisements = Advertisements {
+            advertisements: Vec::from([Advertisement {
+                container_id: 0,
+                id: 0,
+                name: "Advertisement".to_string(),
+                url: "https://advertisement.com".to_string(),
+            }]),
+        };
+
+        let expected: &str = "\
+            {\
+                \"advertisements\":[\
+                    {\
+                        \"containerId\":0,\
+                        \"id\":0,\
+                        \"name\":\"Advertisement\",\
+                        \"url\":\"https://advertisement.com\"\
+                    }\
+                ]\
+            }\
+        ";
+
+        // When
+        let result: serde_json::Result<String> = serde_json::to_string(&data);
+
+        // Then
+        match result {
+            Ok(actual) => assert_eq!(actual, expected),
+            Err(err) => panic!("Failed to deserialize with error: {:?}", err),
+        }
+    }
+
+    #[test]
+    fn serialize_asset_reference() {
+        // Given
+        let data: AssetReference = AssetReference {
+            asset_id: 0,
+            asset_type: AssetType::AD,
+            video_id: 0,
+        };
+
+        let expected: &str = r#"{"assetId":0,"assetType":"AD","videoId":0}"#;
+
+        // When
+        let result: serde_json::Result<String> = serde_json::to_string(&data);
+
+        // Then
+        match result {
+            Ok(actual) => assert_eq!(actual, expected),
+            Err(err) => panic!("Failed to deserialize with error: {:?}", err),
+        }
+    }
+
+    #[test]
+    fn serialize_image() {
+        // Given
+        let data: Image = Image {
+            container_id: 0,
+            id: 0,
+            name: "Image".to_string(),
+            url: "https://image.com".to_string(),
+        };
+
+        let expected: &str = r#"{"containerId":0,"id":0,"name":"Image","url":"https://image.com"}"#;
+
+        // When
+        let result: serde_json::Result<String> = serde_json::to_string(&data);
+
+        // Then
+        match result {
+            Ok(actual) => assert_eq!(actual, expected),
+            Err(err) => panic!("Failed to deserialize with error: {:?}", err),
+        }
+    }
+
+    #[test]
+    fn serialize_images() {
+        // Given
+        let data: Images = Images {
+            images: Vec::from([Image {
+                container_id: 0,
+                id: 0,
+                name: "Image".to_string(),
+                url: "https://image.com".to_string(),
+            }]),
+        };
+
+        let expected: &str =
+            r#"{"images":[{"containerId":0,"id":0,"name":"Image","url":"https://image.com"}]}"#;
+
+        // When
+        let result: serde_json::Result<String> = serde_json::to_string(&data);
+
+        // Then
+        match result {
+            Ok(actual) => assert_eq!(actual, expected),
+            Err(err) => panic!("Failed to deserialize with error: {:?}", err),
+        }
+    }
+
+    #[test]
+    fn serialize_video() {
+        // Given
+        let data: Video = Video {
+            container_id: 0,
+            description: "A short video clip".to_string(),
+            expiration_date: "2022-03-23".to_string(),
+            id: 0,
+            playback_url: "https://www.youtube.com/watch?v=00000000000".to_string(),
+            title: "Video".to_string(),
+            r#type: VideoType::CLIP,
+        };
+
+        let expected: &str = "\
+            {\
+                \"containerId\":0,\
+                \"description\":\"A short video clip\",\
+                \"expirationDate\":\"2022-03-23\",\
+                \"id\":0,\
+                \"playbackUrl\":\"https://www.youtube.com/watch?v=00000000000\",\
+                \"title\":\"Video\",\
+                \"type\":\"CLIP\"\
+            }\
+        ";
+
+        // When
+        let result: serde_json::Result<String> = serde_json::to_string(&data);
+
+        // Then
+        match result {
+            Ok(actual) => assert_eq!(actual, expected),
+            Err(err) => panic!("Failed to deserialize with error: {:?}", err),
+        }
+    }
+
+    #[test]
+    fn serialize_videos() {
+        // Given
+        let data: Videos = Videos {
+            videos: Vec::from([Video {
+                container_id: 0,
+                description: "A short video clip".to_string(),
+                expiration_date: "2022-03-23".to_string(),
+                id: 0,
+                playback_url: "https://www.youtube.com/watch?v=00000000000".to_string(),
+                title: "Video".to_string(),
+                r#type: VideoType::CLIP,
+            }]),
+        };
+
+        let expected: &str = "\
+            {\
+                \"videos\":[\
+                    {\
+                        \"containerId\":0,\
+                        \"description\":\"A short video clip\",\
+                        \"expirationDate\":\"2022-03-23\",\
+                        \"id\":0,\
+                        \"playbackUrl\":\"https://www.youtube.com/watch?v=00000000000\",\
+                        \"title\":\"Video\",\
+                        \"type\":\"CLIP\"\
+                    }\
+                ]\
+            }\
+        ";
+
+        // When
+        let result: serde_json::Result<String> = serde_json::to_string(&data);
+
+        // Then
+        match result {
+            Ok(actual) => assert_eq!(actual, expected),
             Err(err) => panic!("Failed to deserialize with error: {:?}", err),
         }
     }
