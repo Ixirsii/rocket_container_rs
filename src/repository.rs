@@ -6,12 +6,15 @@
 
 extern crate reqwest;
 
-use crate::types::{AssetType, VideoType};
+use crate::types::{AssetType, Error, ErrorKind, VideoType};
+use rand::{thread_rng, Rng};
 use reqwest::{Client, RequestBuilder, Response, StatusCode};
 use serde::{Deserialize, Serialize};
 use std::borrow::Borrow;
 use std::cmp::min;
 use std::future::Future;
+use std::thread;
+use std::time::Duration;
 
 /* ***************************************** Constants ****************************************** */
 
@@ -35,9 +38,9 @@ const MAX_BACKOFF: u64 = 1_000;
 #[serde(rename_all = "camelCase")]
 pub struct Advertisement {
     /// Parent container e.g. show/series identifier.
-    container_id: u32,
+    container_id: String,
     /// Unique advertisement identifier.
-    id: u32,
+    id: String,
     /// Name of advertisement.
     name: String,
     /// Advertisement playback url.
@@ -52,11 +55,11 @@ pub struct Advertisement {
 #[serde(rename_all = "camelCase")]
 pub struct AssetReference {
     /// Unique identifier for referenced asset.
-    asset_id: u32,
+    asset_id: String,
     /// Type of asset.
     asset_type: AssetType,
     /// Unique identifier for referenced video.
-    video_id: u32,
+    video_id: String,
 }
 
 /// Image data returned from Rocket Image service.
@@ -64,9 +67,9 @@ pub struct AssetReference {
 #[serde(rename_all = "camelCase")]
 pub struct Image {
     /// Parent container e.g. show/series identifier.
-    container_id: u32,
+    container_id: String,
     /// Unique image identifier.
-    id: u32,
+    id: String,
     /// Name of image.
     name: String,
     /// Image URL.
@@ -74,20 +77,20 @@ pub struct Image {
 }
 
 /// Alias for [core::result::Result] where the error type is always [Error]<[reqwest::Error]>.
-pub type Result<T> = core::result::Result<T, reqwest::Error>;
+pub type Result<T> = core::result::Result<T, Error>;
 
 /// Video data returned from Rocket Video service.
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Video {
     /// Parent container e.g. show/series identifier.
-    container_id: u32,
+    container_id: String,
     /// Brief description of the video.
     description: String,
     /// Expiration date for video in ISO-8601 format.
     expiration_date: String,
     /// Unique video identifier.
-    id: u32,
+    id: String,
     /// URL for video playback.
     playback_url: String,
     /// Video title.
@@ -171,8 +174,8 @@ struct Videos {
 ///     };
 /// }
 /// ```
-pub fn list_all_advertisements(client: &Client) -> Result<Vec<Advertisement>> {
-    get::<Advertisement, Advertisements, ()>(client, ADVERTISEMENT_ENDPOINT, None)
+pub async fn list_all_advertisements(client: &Client) -> Result<Vec<Advertisement>> {
+    get::<Advertisement, Advertisements, ()>(client, ADVERTISEMENT_ENDPOINT, None).await
 }
 
 /// List advertisements for a container from Rocket Advertisement.
@@ -193,12 +196,13 @@ pub fn list_all_advertisements(client: &Client) -> Result<Vec<Advertisement>> {
 ///     };
 /// }
 /// ```
-pub fn list_advertisements(client: &Client, container_id: u32) -> Result<Vec<Advertisement>> {
+pub async fn list_advertisements(client: &Client, container_id: u32) -> Result<Vec<Advertisement>> {
     get::<Advertisement, Advertisements, [(&str, u32); 1]>(
         client,
         ADVERTISEMENT_ENDPOINT,
         Some([(CONTAINER_ID, container_id)]),
     )
+    .await
 }
 
 /// Make a GET request with exponential backoff and retries on request failures.
@@ -243,7 +247,7 @@ pub fn list_advertisements(client: &Client, container_id: u32) -> Result<Vec<Adv
 ///     )
 /// }
 /// ```
-fn get<T, W, Q>(client: &Client, endpoint: &str, query: Option<Q>) -> Result<Vec<T>>
+async fn get<T, W, Q>(client: &Client, endpoint: &str, query: Option<Q>) -> Result<Vec<T>>
 where
     W: Wrapper<T> + for<'de> Deserialize<'de>,
     Q: Serialize,
@@ -259,41 +263,60 @@ where
             Ok(response) => {
                 if response.status() == StatusCode::OK {
                     response
+                } else if response.status() == StatusCode::NOT_FOUND {
+                    return Err(Error::new(ErrorKind::Permanent, "Resource not found"));
+                } else if response.status() == StatusCode::INTERNAL_SERVER_ERROR {
+                    return Err(Error::new(ErrorKind::Transient, "Internal server error"));
                 } else {
-                    return Err();
+                    return Err(Error::new(ErrorKind::Permanent, "Unexpected error"));
                 }
             }
-            Err(err) => return Err(err),
+            Err(err) => return Err(Error::new(ErrorKind::Permanent, &err.to_string())),
         };
 
-        let result: Vec<T> = response
-            .json::<W>()
-            .await
-            .map_err(Error::Permanent)?
-            .unwrap();
-
-        Ok(result)
+        match response.json::<W>().await {
+            Ok(result) => Ok(result.unwrap()),
+            Err(err) => Err(Error::new(ErrorKind::Permanent, &err.to_string())),
+        }
     };
+
+    retry(op).await
 }
 
-fn retry<I, E, Fn, Fut>(operation: Fn) -> Result<I>
-where
-    Fn: FnMut() -> Fut,
-    Fut: Future<Output = Result<I>>,
-{
-    for i in 0..MAX_ATTEMPTS {}
-}
-
+/// Get backoff/delay to wait before the next retry attempt.
 fn get_backoff(attempt: u32) -> u64 {
     const BASE: u64 = 2;
     let exponential_backoff: u64 = BASE.pow(attempt);
-    let random_number_milliseconds: u64;
+    let random_number_milliseconds: u64 = thread_rng().gen_range(0..100);
     let backoff: u64 = exponential_backoff + random_number_milliseconds;
 
     min(backoff, MAX_BACKOFF)
 }
 
-/* ************************************** Implementations *************************************** */
+/// Calls a function and retries if the function fails.
+async fn retry<I, F, Fut>(mut f: F) -> Result<I>
+where
+    F: FnMut() -> Fut,
+    Fut: Future<Output = Result<I>>,
+{
+    for i in 1..MAX_ATTEMPTS {
+        match f().await {
+            Ok(data) => return Ok(data),
+            Err(err) => {
+                if err.kind == ErrorKind::Permanent {
+                    return Err(err);
+                }
+            }
+        }
+
+        let backoff: u64 = get_backoff(i);
+        thread::sleep(Duration::from_millis(backoff));
+    }
+
+    return f().await;
+}
+
+/* *************************************** Implementation *************************************** */
 
 impl Wrapper<Advertisement> for Advertisements {
     fn unwrap(self) -> Vec<Advertisement> {
@@ -326,14 +349,14 @@ mod test {
 
     /* ******************************** list_advertisements ********************************* */
 
-    #[test]
-    fn test_list_advertisements() {
+    #[tokio::test]
+    async fn test_list_advertisements() {
         // Given
         let client: Client = Client::new();
         let container_id: u32 = 0;
 
         // When
-        let result: Result<Vec<Advertisement>> = list_advertisements(&client, container_id);
+        let result: Result<Vec<Advertisement>> = list_advertisements(&client, container_id).await;
 
         // Then
         match result {
@@ -342,13 +365,13 @@ mod test {
         }
     }
 
-    #[test]
-    fn test_list_all_advertisements() {
+    #[tokio::test]
+    async fn test_list_all_advertisements() {
         // Given
         let client: Client = Client::new();
 
         // When
-        let result: Result<Vec<Advertisement>> = list_all_advertisements(&client);
+        let result: Result<Vec<Advertisement>> = list_all_advertisements(&client).await;
 
         // Then
         match result {
@@ -364,16 +387,16 @@ mod test {
         // Given
         let data: &str = r#"
             {
-                "containerId": 0,
-                "id": 0,
+                "containerId": "0",
+                "id": "0",
                 "name": "Advertisement",
                 "url": "https://advertisement.com"
             }
         "#;
 
         let expected: Advertisement = Advertisement {
-            container_id: 0,
-            id: 0,
+            container_id: 0.to_string(),
+            id: 0.to_string(),
             name: "Advertisement".to_string(),
             url: "https://advertisement.com".to_string(),
         };
@@ -395,8 +418,8 @@ mod test {
             {
                 "advertisements": [
                     {
-                        "containerId": 0,
-                        "id": 0,
+                        "containerId": "0",
+                        "id": "0",
                         "name": "Advertisement",
                         "url": "https://advertisement.com"
                     }
@@ -406,8 +429,8 @@ mod test {
 
         let expected: Advertisements = Advertisements {
             advertisements: Vec::from([Advertisement {
-                container_id: 0,
-                id: 0,
+                container_id: 0.to_string(),
+                id: 0.to_string(),
                 name: "Advertisement".to_string(),
                 url: "https://advertisement.com".to_string(),
             }]),
@@ -428,16 +451,16 @@ mod test {
         // Given
         let data: &str = r#"
             {
-                "assetId": 0,
+                "assetId": "0",
                 "assetType": "AD",
-                "videoId": 0
+                "videoId": "0"
             }
         "#;
 
         let expected: AssetReference = AssetReference {
-            asset_id: 0,
+            asset_id: 0.to_string(),
             asset_type: AssetType::AD,
-            video_id: 0,
+            video_id: 0.to_string(),
         };
 
         // When
@@ -455,16 +478,16 @@ mod test {
         // Given
         let data: &str = r#"
             {
-                "containerId": 0,
-                "id": 0,
+                "containerId": "0",
+                "id": "0",
                 "name": "Image",
                 "url": "https://image.com"
             }
         "#;
 
         let expected: Image = Image {
-            container_id: 0,
-            id: 0,
+            container_id: 0.to_string(),
+            id: 0.to_string(),
             name: "Image".to_string(),
             url: "https://image.com".to_string(),
         };
@@ -486,8 +509,8 @@ mod test {
             {
                 "images": [
                     {
-                        "containerId": 0,
-                        "id": 0,
+                        "containerId": "0",
+                        "id": "0",
                         "name": "Image",
                         "url": "https://image.com"
                     }
@@ -497,8 +520,8 @@ mod test {
 
         let expected: Images = Images {
             images: Vec::from([Image {
-                container_id: 0,
-                id: 0,
+                container_id: 0.to_string(),
+                id: 0.to_string(),
                 name: "Image".to_string(),
                 url: "https://image.com".to_string(),
             }]),
@@ -519,10 +542,10 @@ mod test {
         // Given
         let data: &str = r#"
             {
-                "containerId": 0,
+                "containerId": "0",
                 "description": "A short video clip",
                 "expirationDate": "2022-03-23",
-                "id": 0,
+                "id": "0",
                 "playbackUrl": "https://www.youtube.com/watch?v=00000000000",
                 "title": "Video",
                 "type": "CLIP"
@@ -530,10 +553,10 @@ mod test {
         "#;
 
         let expected: Video = Video {
-            container_id: 0,
+            container_id: 0.to_string(),
             description: "A short video clip".to_string(),
             expiration_date: "2022-03-23".to_string(),
-            id: 0,
+            id: 0.to_string(),
             playback_url: "https://www.youtube.com/watch?v=00000000000".to_string(),
             title: "Video".to_string(),
             r#type: VideoType::CLIP,
@@ -556,10 +579,10 @@ mod test {
             {
                 "videos": [
                     {
-                        "containerId": 0,
+                        "containerId": "0",
                         "description": "A short video clip",
                         "expirationDate": "2022-03-23",
-                        "id": 0,
+                        "id": "0",
                         "playbackUrl": "https://www.youtube.com/watch?v=00000000000",
                         "title": "Video",
                         "type": "CLIP"
@@ -570,10 +593,10 @@ mod test {
 
         let expected: Videos = Videos {
             videos: Vec::from([Video {
-                container_id: 0,
+                container_id: 0.to_string(),
                 description: "A short video clip".to_string(),
                 expiration_date: "2022-03-23".to_string(),
-                id: 0,
+                id: 0.to_string(),
                 playback_url: "https://www.youtube.com/watch?v=00000000000".to_string(),
                 title: "Video".to_string(),
                 r#type: VideoType::CLIP,
@@ -596,14 +619,20 @@ mod test {
     fn serialize_advertisement() {
         // Given
         let data: Advertisement = Advertisement {
-            container_id: 0,
-            id: 0,
+            container_id: 0.to_string(),
+            id: 0.to_string(),
             name: "Advertisement".to_string(),
             url: "https://advertisement.com".to_string(),
         };
 
-        let expected: &str =
-            r#"{"containerId":0,"id":0,"name":"Advertisement","url":"https://advertisement.com"}"#;
+        let expected: &str = "\
+            {\
+                \"containerId\":\"0\",\
+                \"id\":\"0\",\
+                \"name\":\"Advertisement\",\
+                \"url\":\"https://advertisement.com\"\
+            }\
+        ";
 
         // When
         let result: serde_json::Result<String> = serde_json::to_string(&data);
@@ -620,8 +649,8 @@ mod test {
         // Given
         let data: Advertisements = Advertisements {
             advertisements: Vec::from([Advertisement {
-                container_id: 0,
-                id: 0,
+                container_id: 0.to_string(),
+                id: 0.to_string(),
                 name: "Advertisement".to_string(),
                 url: "https://advertisement.com".to_string(),
             }]),
@@ -631,8 +660,8 @@ mod test {
             {\
                 \"advertisements\":[\
                     {\
-                        \"containerId\":0,\
-                        \"id\":0,\
+                        \"containerId\":\"0\",\
+                        \"id\":\"0\",\
                         \"name\":\"Advertisement\",\
                         \"url\":\"https://advertisement.com\"\
                     }\
@@ -654,12 +683,12 @@ mod test {
     fn serialize_asset_reference() {
         // Given
         let data: AssetReference = AssetReference {
-            asset_id: 0,
+            asset_id: 0.to_string(),
             asset_type: AssetType::AD,
-            video_id: 0,
+            video_id: 0.to_string(),
         };
 
-        let expected: &str = r#"{"assetId":0,"assetType":"AD","videoId":0}"#;
+        let expected: &str = r#"{"assetId":"0","assetType":"AD","videoId":"0"}"#;
 
         // When
         let result: serde_json::Result<String> = serde_json::to_string(&data);
@@ -675,13 +704,14 @@ mod test {
     fn serialize_image() {
         // Given
         let data: Image = Image {
-            container_id: 0,
-            id: 0,
+            container_id: 0.to_string(),
+            id: 0.to_string(),
             name: "Image".to_string(),
             url: "https://image.com".to_string(),
         };
 
-        let expected: &str = r#"{"containerId":0,"id":0,"name":"Image","url":"https://image.com"}"#;
+        let expected: &str =
+            r#"{"containerId":"0","id":"0","name":"Image","url":"https://image.com"}"#;
 
         // When
         let result: serde_json::Result<String> = serde_json::to_string(&data);
@@ -698,15 +728,15 @@ mod test {
         // Given
         let data: Images = Images {
             images: Vec::from([Image {
-                container_id: 0,
-                id: 0,
+                container_id: 0.to_string(),
+                id: 0.to_string(),
                 name: "Image".to_string(),
                 url: "https://image.com".to_string(),
             }]),
         };
 
         let expected: &str =
-            r#"{"images":[{"containerId":0,"id":0,"name":"Image","url":"https://image.com"}]}"#;
+            r#"{"images":[{"containerId":"0","id":"0","name":"Image","url":"https://image.com"}]}"#;
 
         // When
         let result: serde_json::Result<String> = serde_json::to_string(&data);
@@ -722,10 +752,10 @@ mod test {
     fn serialize_video() {
         // Given
         let data: Video = Video {
-            container_id: 0,
+            container_id: 0.to_string(),
             description: "A short video clip".to_string(),
             expiration_date: "2022-03-23".to_string(),
-            id: 0,
+            id: 0.to_string(),
             playback_url: "https://www.youtube.com/watch?v=00000000000".to_string(),
             title: "Video".to_string(),
             r#type: VideoType::CLIP,
@@ -733,10 +763,10 @@ mod test {
 
         let expected: &str = "\
             {\
-                \"containerId\":0,\
+                \"containerId\":\"0\",\
                 \"description\":\"A short video clip\",\
                 \"expirationDate\":\"2022-03-23\",\
-                \"id\":0,\
+                \"id\":\"0\",\
                 \"playbackUrl\":\"https://www.youtube.com/watch?v=00000000000\",\
                 \"title\":\"Video\",\
                 \"type\":\"CLIP\"\
@@ -758,10 +788,10 @@ mod test {
         // Given
         let data: Videos = Videos {
             videos: Vec::from([Video {
-                container_id: 0,
+                container_id: 0.to_string(),
                 description: "A short video clip".to_string(),
                 expiration_date: "2022-03-23".to_string(),
-                id: 0,
+                id: 0.to_string(),
                 playback_url: "https://www.youtube.com/watch?v=00000000000".to_string(),
                 title: "Video".to_string(),
                 r#type: VideoType::CLIP,
@@ -772,10 +802,10 @@ mod test {
             {\
                 \"videos\":[\
                     {\
-                        \"containerId\":0,\
+                        \"containerId\":\"0\",\
                         \"description\":\"A short video clip\",\
                         \"expirationDate\":\"2022-03-23\",\
-                        \"id\":0,\
+                        \"id\":\"0\",\
                         \"playbackUrl\":\"https://www.youtube.com/watch?v=00000000000\",\
                         \"title\":\"Video\",\
                         \"type\":\"CLIP\"\

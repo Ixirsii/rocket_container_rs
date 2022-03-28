@@ -20,6 +20,18 @@ pub enum AssetType {
     IMAGE,
 }
 
+#[derive(Debug, Eq, PartialEq)]
+pub struct Error {
+    pub kind: ErrorKind,
+    pub message: String,
+}
+
+#[derive(Debug, Eq, PartialEq)]
+pub enum ErrorKind {
+    Permanent,
+    Transient,
+}
+
 /// Type of `Video`
 ///
 /// Videos can be either short clips, TV length episodes, or full length movies, and the type of
@@ -42,6 +54,17 @@ pub enum VideoType {
 //     title: String,
 //     videos: Vec<Video>
 // }
+
+/* *************************************** Implementation *************************************** */
+
+impl Error {
+    pub fn new(kind: ErrorKind, message: &str) -> Self {
+        Error {
+            kind,
+            message: String::from(message),
+        }
+    }
+}
 
 /* ******************************************* Tests ******************************************** */
 
