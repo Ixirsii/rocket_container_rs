@@ -1,6 +1,7 @@
 //! Repository layer for making requests to dependencies.
 
 mod advertisement;
+mod image;
 mod types;
 
 extern crate reqwest;

@@ -80,7 +80,20 @@ mod test {
     use crate::types::Result;
     use reqwest::Client;
 
-    /* ******************************** list_advertisements ********************************* */
+    #[tokio::test]
+    async fn test_list_all_advertisements() {
+        // Given
+        let client: Client = Client::new();
+
+        // When
+        let result: Result<Vec<Advertisement>> = list_all_advertisements(&client).await;
+
+        // Then
+        match result {
+            Ok(advertisements) => assert!(!advertisements.is_empty()),
+            Err(err) => panic!("Failed to list all advertisements with error: {:#?}", err),
+        }
+    }
 
     #[tokio::test]
     async fn test_list_advertisements() {
@@ -94,22 +107,7 @@ mod test {
         // Then
         match result {
             Ok(advertisements) => assert!(!advertisements.is_empty()),
-            Err(err) => panic!("Failed to list all advertisements with error: {:#?}", err),
-        }
-    }
-
-    #[tokio::test]
-    async fn test_list_all_advertisements() {
-        // Given
-        let client: Client = Client::new();
-
-        // When
-        let result: Result<Vec<Advertisement>> = list_all_advertisements(&client).await;
-
-        // Then
-        match result {
-            Ok(advertisements) => assert!(!advertisements.is_empty()),
-            Err(err) => panic!("Failed to list all advertisements with error: {:#?}", err),
+            Err(err) => panic!("Failed to list advertisements with error: {:#?}", err),
         }
     }
 }
