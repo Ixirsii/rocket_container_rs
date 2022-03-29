@@ -1,13 +1,19 @@
 [package]
 name = "rocket_stream_rust"
 version = "0.1.0"
+author = "Ryan Porterfield <ixirsii@protonmail.com>"
+description = "A solution for Bottle Rocket Studio's Rocket Stream coding test"
+license = "BSD 3-Clause"
+repository = "https://bitbucket.org/Ixirsii/rocket_stream_rust/"
+readme = "README.md"
+keywords = ["bottle", "rocket", "studios", "stream"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 log = "0.4.16"
-log4rs = "1.0.0"
+log4rs = { version = "1.0.0", features = ["console_appender", "fixed_window_roller", "gzip", "rolling_file_appender"] }
 rand = "0.8.5"
 reqwest = { version = "0.11.9", features = ["json"] }
 #rocket = "0.4.10"
