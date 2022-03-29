@@ -1,7 +1,4 @@
 //! Public crate type definitions.
-//!
-//! This will definitely change in the future as I learn more about how rust works and develop a
-//! better plan of implementation.
 
 use serde::{Deserialize, Serialize};
 
@@ -31,6 +28,9 @@ pub enum ErrorKind {
     Permanent,
     Transient,
 }
+
+/// Alias for [core::result::Result] where the error type is always [Error]<[reqwest::Error]>.
+pub type Result<T> = core::result::Result<T, Error>;
 
 /// Type of `Video`
 ///
@@ -84,7 +84,7 @@ mod test {
         // Then
         match actual {
             Ok(asset_type) => assert_eq!(asset_type, AssetType::AD),
-            Err(err) => panic!("Failed to deserialize with error: {:?}", err),
+            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
         }
     }
 
@@ -99,7 +99,7 @@ mod test {
         // Then
         match actual {
             Ok(asset_type) => assert_eq!(asset_type, AssetType::IMAGE),
-            Err(err) => panic!("Failed to deserialize with error: {:?}", err),
+            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
         }
     }
 
@@ -114,7 +114,7 @@ mod test {
         // Then
         match actual {
             Ok(video_type) => assert_eq!(video_type, VideoType::CLIP),
-            Err(err) => panic!("Failed to deserialize with error: {:?}", err),
+            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
         }
     }
 
@@ -129,7 +129,7 @@ mod test {
         // Then
         match actual {
             Ok(video_type) => assert_eq!(video_type, VideoType::EPISODE),
-            Err(err) => panic!("Failed to deserialize with error: {:?}", err),
+            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
         }
     }
 
@@ -144,7 +144,7 @@ mod test {
         // Then
         match actual {
             Ok(video_type) => assert_eq!(video_type, VideoType::MOVIE),
-            Err(err) => panic!("Failed to deserialize with error: {:?}", err),
+            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
         }
     }
 
@@ -159,7 +159,7 @@ mod test {
         // Then
         match actual {
             Ok(json) => assert_eq!(json, expected),
-            Err(_) => panic!("Result should be Ok"),
+            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
         }
     }
 
@@ -174,7 +174,7 @@ mod test {
         // Then
         match actual {
             Ok(json) => assert_eq!(json, expected),
-            Err(err) => panic!("Failed to deserialize with error: {:?}", err),
+            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
         }
     }
 
@@ -189,7 +189,7 @@ mod test {
         // Then
         match actual {
             Ok(json) => assert_eq!(json, expected),
-            Err(err) => panic!("Failed to deserialize with error: {:?}", err),
+            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
         }
     }
 
@@ -204,7 +204,7 @@ mod test {
         // Then
         match actual {
             Ok(json) => assert_eq!(json, expected),
-            Err(err) => panic!("Failed to deserialize with error: {:?}", err),
+            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
         }
     }
 
@@ -219,7 +219,7 @@ mod test {
         // Then
         match actual {
             Ok(json) => assert_eq!(json, expected),
-            Err(err) => panic!("Failed to deserialize with error: {:?}", err),
+            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
         }
     }
 }
