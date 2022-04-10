@@ -8,6 +8,7 @@ use log::info;
 
 mod controller;
 mod repository;
+mod service;
 mod types;
 
 #[tokio::main]
