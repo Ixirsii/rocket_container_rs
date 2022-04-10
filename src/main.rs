@@ -6,6 +6,7 @@
 
 use log::info;
 
+mod controller;
 mod repository;
 mod types;
 

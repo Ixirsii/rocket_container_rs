@@ -1,7 +1,7 @@
 //! Advertisement repository.
 
-use crate::repository::get_wrapped_list;
-use crate::repository::types::{Advertisement, Advertisements};
+use super::get_wrapped_list;
+use super::types::advertisement::{AdvertisementDto, AdvertisementsDto};
 use crate::types::Result;
 use log::trace;
 use reqwest::Client;
@@ -33,11 +33,15 @@ const CONTAINER_ID: &str = "containerId";
 ///     Ok(())
 /// }
 /// ```
-pub async fn list_all_advertisements(client: &Client) -> Result<Vec<Advertisement>> {
+pub async fn list_all_advertisements(client: &Client) -> Result<Vec<AdvertisementDto>> {
     trace!("Listing all advertisements");
 
-    get_wrapped_list::<Advertisement, Advertisements, ()>(client, ADVERTISEMENT_ENDPOINT, None)
-        .await
+    get_wrapped_list::<AdvertisementDto, AdvertisementsDto, ()>(
+        client,
+        ADVERTISEMENT_ENDPOINT,
+        None,
+    )
+    .await
 }
 
 /// List advertisements for a container from Rocket Advertisement.
@@ -61,10 +65,13 @@ pub async fn list_all_advertisements(client: &Client) -> Result<Vec<Advertisemen
 ///     Ok(())
 /// }
 /// ```
-pub async fn list_advertisements(client: &Client, container_id: u32) -> Result<Vec<Advertisement>> {
+pub async fn list_advertisements(
+    client: &Client,
+    container_id: u32,
+) -> Result<Vec<AdvertisementDto>> {
     trace!("Listing advertisements for container {}", container_id);
 
-    get_wrapped_list::<Advertisement, Advertisements, [(&str, u32); 1]>(
+    get_wrapped_list::<AdvertisementDto, AdvertisementsDto, [(&str, u32); 1]>(
         client,
         ADVERTISEMENT_ENDPOINT,
         Some([(CONTAINER_ID, container_id)]),
@@ -77,7 +84,7 @@ pub async fn list_advertisements(client: &Client, container_id: u32) -> Result<V
 #[cfg(test)]
 mod test {
     use super::{list_advertisements, list_all_advertisements};
-    use crate::repository::types::Advertisement;
+    use crate::repository::types::advertisement::AdvertisementDto;
     use crate::types::Result;
     use reqwest::Client;
 
@@ -87,7 +94,7 @@ mod test {
         let client: Client = Client::new();
 
         // When
-        let result: Result<Vec<Advertisement>> = list_all_advertisements(&client).await;
+        let result: Result<Vec<AdvertisementDto>> = list_all_advertisements(&client).await;
 
         // Then
         match result {
@@ -103,7 +110,8 @@ mod test {
         let container_id: u32 = 0;
 
         // When
-        let result: Result<Vec<Advertisement>> = list_advertisements(&client, container_id).await;
+        let result: Result<Vec<AdvertisementDto>> =
+            list_advertisements(&client, container_id).await;
 
         // Then
         match result {

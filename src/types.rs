@@ -10,7 +10,7 @@ use std::fmt::{Display, Formatter};
 /// `AssetReference` is a generic container which points to "assets" associated with a video.
 /// Those assets can be either advertisements or images, and the type of asset is tracked by the
 /// types of this enum.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum AssetType {
     /// Advertisement asset.
     AD,
@@ -37,7 +37,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 ///
 /// Videos can be either short clips, TV length episodes, or full length movies, and the type of
 /// video is tracked by the types of this enum.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum VideoType {
     /// A short clip.
     CLIP,

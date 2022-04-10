@@ -1,10 +1,5 @@
 //! Repository layer for making requests to dependencies.
 
-mod advertisement;
-mod image;
-mod types;
-mod video;
-
 extern crate reqwest;
 
 use crate::types::{Error, ErrorKind, Result};
@@ -19,6 +14,11 @@ use std::future::Future;
 use std::thread;
 use std::time::Duration;
 use types::Wrapper;
+
+pub mod advertisement;
+pub mod image;
+pub mod types;
+pub mod video;
 
 /// Maximum number of retries when a service call fails.
 const MAX_ATTEMPTS: u32 = 10;
