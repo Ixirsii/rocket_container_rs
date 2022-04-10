@@ -1,6 +1,7 @@
 //! Public crate type definitions.
 
 use serde::{Deserialize, Serialize};
+use std::fmt::{Display, Formatter};
 
 /* ******************************************* Types ******************************************** */
 
@@ -62,6 +63,40 @@ impl Error {
         Error {
             kind,
             message: String::from(message),
+        }
+    }
+}
+
+impl Display for AssetType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AssetType::AD => write!(f, "AD"),
+            AssetType::IMAGE => write!(f, "IMAGE"),
+        }
+    }
+}
+
+impl Display for Error {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "(kind: {}, message: {})", self.kind, self.message)
+    }
+}
+
+impl Display for ErrorKind {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ErrorKind::Permanent => write!(f, "Permanent"),
+            ErrorKind::Transient => write!(f, "Transient"),
+        }
+    }
+}
+
+impl Display for VideoType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            VideoType::CLIP => write!(f, "CLIP"),
+            VideoType::EPISODE => write!(f, "EPISODE"),
+            VideoType::MOVIE => write!(f, "MOVIE"),
         }
     }
 }

@@ -1,6 +1,6 @@
 //! Advertisement repository.
 
-use crate::repository::get;
+use crate::repository::get_wrapped_list;
 use crate::repository::types::{Advertisement, Advertisements};
 use crate::types::Result;
 use log::trace;
@@ -36,7 +36,8 @@ const CONTAINER_ID: &str = "containerId";
 pub async fn list_all_advertisements(client: &Client) -> Result<Vec<Advertisement>> {
     trace!("Listing all advertisements");
 
-    get::<Advertisement, Advertisements, ()>(client, ADVERTISEMENT_ENDPOINT, None).await
+    get_wrapped_list::<Advertisement, Advertisements, ()>(client, ADVERTISEMENT_ENDPOINT, None)
+        .await
 }
 
 /// List advertisements for a container from Rocket Advertisement.
@@ -63,7 +64,7 @@ pub async fn list_all_advertisements(client: &Client) -> Result<Vec<Advertisemen
 pub async fn list_advertisements(client: &Client, container_id: u32) -> Result<Vec<Advertisement>> {
     trace!("Listing advertisements for container {}", container_id);
 
-    get::<Advertisement, Advertisements, [(&str, u32); 1]>(
+    get_wrapped_list::<Advertisement, Advertisements, [(&str, u32); 1]>(
         client,
         ADVERTISEMENT_ENDPOINT,
         Some([(CONTAINER_ID, container_id)]),
@@ -90,7 +91,7 @@ mod test {
 
         // Then
         match result {
-            Ok(advertisements) => assert!(!advertisements.is_empty()),
+            Ok(actual) => assert!(!actual.is_empty()),
             Err(err) => panic!("Failed to list all advertisements with error: {:#?}", err),
         }
     }
@@ -106,7 +107,7 @@ mod test {
 
         // Then
         match result {
-            Ok(advertisements) => assert!(!advertisements.is_empty()),
+            Ok(actual) => assert!(!actual.is_empty()),
             Err(err) => panic!("Failed to list advertisements with error: {:#?}", err),
         }
     }

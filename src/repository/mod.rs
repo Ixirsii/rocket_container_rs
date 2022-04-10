@@ -3,6 +3,7 @@
 mod advertisement;
 mod image;
 mod types;
+mod video;
 
 extern crate reqwest;
 
@@ -24,6 +25,55 @@ const MAX_ATTEMPTS: u32 = 10;
 
 /// Maximum backoff delay when retrying a service call.
 const MAX_BACKOFF: u64 = 1_000;
+
+async fn get(request_builder: RequestBuilder) -> Result<Response> {
+    match request_builder.send().await {
+        Ok(response) => {
+            if response.status() == StatusCode::OK {
+                Ok(response)
+            } else if response.status() == StatusCode::NOT_FOUND {
+                Err(Error::new(ErrorKind::Permanent, "Resource not found"))
+            } else if response.status() == StatusCode::INTERNAL_SERVER_ERROR {
+                Err(Error::new(ErrorKind::Transient, "Internal server error"))
+            } else {
+                Err(Error::new(ErrorKind::Permanent, "Unexpected error"))
+            }
+        }
+        Err(err) => return Err(Error::new(ErrorKind::Permanent, &err.to_string())),
+    }
+}
+
+/// Get backoff/delay to wait before the next retry attempt.
+fn get_backoff(attempt: u32) -> u64 {
+    const BASE: u64 = 2;
+    let exponential_backoff: u64 = BASE.pow(attempt);
+    let random_number_milliseconds: u64 = thread_rng().gen_range(0..100);
+    let backoff: u64 = exponential_backoff + random_number_milliseconds;
+
+    min(backoff, MAX_BACKOFF)
+}
+
+async fn get_value<T>(client: &Client, endpoint: &str) -> Result<T>
+where
+    T: for<'de> Deserialize<'de>,
+{
+    trace!("Getting {}", endpoint);
+
+    let op = || async {
+        let request_builder: RequestBuilder = client.get(endpoint);
+
+        debug!("Making GET request {:#?}", request_builder);
+
+        let response: Response = get(request_builder).await?;
+
+        match response.json::<T>().await {
+            Ok(result) => Ok(result),
+            Err(err) => Err(Error::new(ErrorKind::Permanent, &err.to_string())),
+        }
+    };
+
+    retry(op).await
+}
 
 /// Make a GET request with exponential backoff and retries on request failures.
 ///
@@ -67,7 +117,11 @@ const MAX_BACKOFF: u64 = 1_000;
 ///     )
 /// }
 /// ```
-async fn get<T, W, Q>(client: &Client, endpoint: &str, query: Option<Q>) -> Result<Vec<T>>
+async fn get_wrapped_list<T, W, Q>(
+    client: &Client,
+    endpoint: &str,
+    query: Option<Q>,
+) -> Result<Vec<T>>
 where
     W: Wrapper<T> + for<'de> Deserialize<'de>,
     Q: Debug + Serialize,
@@ -83,20 +137,7 @@ where
 
         debug!("Making GET request {:#?}", request_builder);
 
-        let response: Response = match request_builder.send().await {
-            Ok(response) => {
-                if response.status() == StatusCode::OK {
-                    response
-                } else if response.status() == StatusCode::NOT_FOUND {
-                    return Err(Error::new(ErrorKind::Permanent, "Resource not found"));
-                } else if response.status() == StatusCode::INTERNAL_SERVER_ERROR {
-                    return Err(Error::new(ErrorKind::Transient, "Internal server error"));
-                } else {
-                    return Err(Error::new(ErrorKind::Permanent, "Unexpected error"));
-                }
-            }
-            Err(err) => return Err(Error::new(ErrorKind::Permanent, &err.to_string())),
-        };
+        let response: Response = get(request_builder).await?;
 
         match response.json::<W>().await {
             Ok(result) => Ok(result.unwrap()),
@@ -105,16 +146,6 @@ where
     };
 
     retry(op).await
-}
-
-/// Get backoff/delay to wait before the next retry attempt.
-fn get_backoff(attempt: u32) -> u64 {
-    const BASE: u64 = 2;
-    let exponential_backoff: u64 = BASE.pow(attempt);
-    let random_number_milliseconds: u64 = thread_rng().gen_range(0..100);
-    let backoff: u64 = exponential_backoff + random_number_milliseconds;
-
-    min(backoff, MAX_BACKOFF)
 }
 
 /// Calls a function and retries if the function fails.

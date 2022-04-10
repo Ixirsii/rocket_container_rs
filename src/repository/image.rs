@@ -1,27 +1,27 @@
 //! Image repository.
 
-use crate::repository::get;
+use crate::repository::get_wrapped_list;
 use crate::repository::types::{Image, Images};
 use crate::types::Result;
 use log::trace;
 use reqwest::Client;
 
-/// Endpoint for Rocket Image service.
-const IMAGE_ENDPOINT: &str = "http://images.rocket-stream.bottlerocketservices.com/images";
-
 /// Container ID query parameter.
 const CONTAINER_ID: &str = "containerId";
+
+/// Endpoint for Rocket Image service.
+const IMAGE_ENDPOINT: &str = "http://images.rocket-stream.bottlerocketservices.com/images";
 
 pub async fn list_all_images(client: &Client) -> Result<Vec<Image>> {
     trace!("Listing all images");
 
-    get::<Image, Images, ()>(client, IMAGE_ENDPOINT, None).await
+    get_wrapped_list::<Image, Images, ()>(client, IMAGE_ENDPOINT, None).await
 }
 
 pub async fn list_images(client: &Client, container_id: u32) -> Result<Vec<Image>> {
     trace!("Listing images for container {}", container_id);
 
-    get::<Image, Images, [(&str, u32); 1]>(
+    get_wrapped_list::<Image, Images, [(&str, u32); 1]>(
         client,
         IMAGE_ENDPOINT,
         Some([(CONTAINER_ID, container_id)]),
@@ -46,7 +46,7 @@ mod test {
 
         // Then
         match result {
-            Ok(images) => assert!(!images.is_empty()),
+            Ok(actual) => assert!(!actual.is_empty()),
             Err(err) => panic!("Failed to list all images with error {:#?}", err),
         }
     }
@@ -62,7 +62,7 @@ mod test {
 
         // Then
         match result {
-            Ok(images) => assert!(!images.is_empty()),
+            Ok(actual) => assert!(!actual.is_empty()),
             Err(err) => panic!("Failed to list images with error {:#?}", err),
         }
     }

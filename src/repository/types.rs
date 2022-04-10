@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 /* ******************************************* Types ******************************************** */
 
-/// Advertisement data returned from Rocket Advertisement service.`
+/// Advertisement data returned from Rocket Advertisement service.
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Advertisement {
@@ -19,10 +19,56 @@ pub struct Advertisement {
     url: String,
 }
 
+impl Advertisement {
+    /// Constructs a new Advertisement.
+    pub fn new(container_id: String, id: String, name: String, url: String) -> Self {
+        Advertisement {
+            container_id,
+            id,
+            name,
+            url,
+        }
+    }
+
+    /// Get [Advertisement::container_id].
+    pub fn container_id(&self) -> &str {
+        &self.container_id
+    }
+
+    /// Get [Advertisement::id].
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+
+    /// Get [Advertisement::name].
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// Get [Advertisement::url].
+    pub fn url(&self) -> &str {
+        &self.url
+    }
+}
+
 /// [Wrapper] for [Advertisement]s.
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Advertisements {
     advertisements: Vec<Advertisement>,
+}
+
+impl Advertisements {
+    /// Construct a new Advertisements wrapper.
+    pub fn new(advertisements: Vec<Advertisement>) -> Self {
+        Advertisements { advertisements }
+    }
+}
+
+impl Wrapper<Advertisement> for Advertisements {
+    /// Unwrap [Advertisements::advertisements].
+    fn unwrap(self) -> Vec<Advertisement> {
+        self.advertisements
+    }
 }
 
 /// A reference to an asset associated with a [Video].
@@ -40,6 +86,32 @@ pub struct AssetReference {
     video_id: String,
 }
 
+impl AssetReference {
+    /// Construct a new AssetReference.
+    pub fn new(asset_id: String, asset_type: AssetType, video_id: String) -> Self {
+        AssetReference {
+            asset_id,
+            asset_type,
+            video_id,
+        }
+    }
+
+    /// Get [AssetReference::asset_id].
+    pub fn asset_id(&self) -> &str {
+        &self.asset_id
+    }
+
+    /// Get [AssetReference::asset_type].
+    pub fn asset_type(&self) -> &AssetType {
+        &self.asset_type
+    }
+
+    /// Get [AssetReference::video_id].
+    pub fn video_id(&self) -> &str {
+        &self.video_id
+    }
+}
+
 /// Image data returned from Rocket Image service.
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -54,10 +126,56 @@ pub struct Image {
     url: String,
 }
 
+impl Image {
+    /// Construct a new Image.
+    pub fn new(container_id: String, id: String, name: String, url: String) -> Self {
+        Image {
+            container_id,
+            id,
+            name,
+            url,
+        }
+    }
+
+    /// Get [Image::container_id].
+    pub fn container_id(&self) -> &str {
+        &self.container_id
+    }
+
+    /// Get [Image::id].
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+
+    /// Get [Image::name].
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// Get [Image::url].
+    pub fn url(&self) -> &str {
+        &self.url
+    }
+}
+
 /// [Wrapper] for [Image]s.
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Images {
     images: Vec<Image>,
+}
+
+impl Images {
+    /// Construct a new Images wrapper.
+    pub fn new(images: Vec<Image>) -> Self {
+        Images { images }
+    }
+}
+
+impl Wrapper<Image> for Images {
+    /// Unwrap [Images::images].
+    fn unwrap(self) -> Vec<Image> {
+        self.images
+    }
 }
 
 /// Video data returned from Rocket Video service.
@@ -80,10 +198,103 @@ pub struct Video {
     r#type: VideoType,
 }
 
+impl Video {
+    /// Construct a new Video.
+    pub fn new(
+        container_id: String,
+        description: String,
+        expiration_date: String,
+        id: String,
+        playback_url: String,
+        title: String,
+        r#type: VideoType,
+    ) -> Self {
+        Video {
+            container_id,
+            description,
+            expiration_date,
+            id,
+            playback_url,
+            title,
+            r#type,
+        }
+    }
+
+    /// Get [Video::container_id].
+    pub fn container_id(&self) -> &str {
+        &self.container_id
+    }
+
+    /// Get [Video::description].
+    pub fn description(&self) -> &str {
+        &self.description
+    }
+
+    /// Get [Video::description].
+    pub fn expiration_date(&self) -> &str {
+        &self.expiration_date
+    }
+
+    /// Get [Video::id].
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+
+    /// Get [Video::playback_url].
+    pub fn playback_url(&self) -> &str {
+        &self.playback_url
+    }
+
+    /// Get [Video::title].
+    pub fn title(&self) -> &str {
+        &self.title
+    }
+
+    /// Get [Video::r#type].
+    pub fn r#type(&self) -> &VideoType {
+        &self.r#type
+    }
+}
+
+/// [Wrapper] for [Video]s.
+#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VideoAssets {
+    video_assets: Vec<AssetReference>,
+}
+
+impl VideoAssets {
+    /// Construct a new VideoAssets wrapper.
+    pub fn new(video_assets: Vec<AssetReference>) -> Self {
+        VideoAssets { video_assets }
+    }
+}
+
+impl Wrapper<AssetReference> for VideoAssets {
+    /// Unwrap [VideoAssets::video_assets].
+    fn unwrap(self) -> Vec<AssetReference> {
+        self.video_assets
+    }
+}
+
 /// [Wrapper] for [Video]s.
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Videos {
     videos: Vec<Video>,
+}
+
+impl Videos {
+    /// Construct a new Videos wrapper.
+    pub fn new(videos: Vec<Video>) -> Self {
+        Videos { videos }
+    }
+}
+
+impl Wrapper<Video> for Videos {
+    /// Unwrap [Videos::videos].
+    fn unwrap(self) -> Vec<Video> {
+        self.videos
+    }
 }
 
 /// Trait for objects which wrap other objects.
@@ -122,26 +333,6 @@ pub struct Videos {
 /// ```
 pub trait Wrapper<T> {
     fn unwrap(self) -> Vec<T>;
-}
-
-/* *************************************** Implementation *************************************** */
-
-impl Wrapper<Advertisement> for Advertisements {
-    fn unwrap(self) -> Vec<Advertisement> {
-        self.advertisements
-    }
-}
-
-impl Wrapper<Image> for Images {
-    fn unwrap(self) -> Vec<Image> {
-        self.images
-    }
-}
-
-impl Wrapper<Video> for Videos {
-    fn unwrap(self) -> Vec<Video> {
-        self.videos
-    }
 }
 
 /* ******************************************* Tests ******************************************** */
