@@ -3,36 +3,32 @@
 use log::trace;
 use reqwest::Client;
 
-use crate::controller::types::Advertisement;
-use crate::repository::advertisement;
+use crate::controller::types::Image;
+use crate::repository::image;
 use crate::types::Result;
 
-pub async fn list_advertisements(client: &Client) -> Result<Vec<Advertisement>> {
+pub async fn list_images(client: &Client) -> Result<Vec<Image>> {
     trace!("Listing all advertisements");
 
-    let advertisements: Vec<Advertisement> = advertisement::list_advertisements(client)
+    let images: Vec<Image> = image::list_images(client)
         .await?
         .into_iter()
-        .map(Advertisement::from)
+        .map(Image::from)
         .collect();
 
-    Ok(advertisements)
+    Ok(images)
 }
 
-pub async fn list_advertisements_by_container(
-    client: &Client,
-    container_id: u32,
-) -> Result<Vec<Advertisement>> {
+pub async fn list_images_by_container(client: &Client, container_id: u32) -> Result<Vec<Image>> {
     trace!("Listing advertisements by container id {}", container_id);
 
-    let advertisements: Vec<Advertisement> =
-        advertisement::list_advertisements_by_container(client, container_id)
-            .await?
-            .into_iter()
-            .map(Advertisement::from)
-            .collect();
+    let images: Vec<Image> = image::list_images_by_container(client, container_id)
+        .await?
+        .into_iter()
+        .map(Image::from)
+        .collect();
 
-    Ok(advertisements)
+    Ok(images)
 }
 
 /* ******************************************* Tests ******************************************** */
@@ -41,10 +37,10 @@ pub async fn list_advertisements_by_container(
 mod test {
     use reqwest::Client;
 
-    use crate::controller::types::Advertisement;
+    use crate::controller::types::Image;
     use crate::types::Result;
 
-    use super::{list_advertisements, list_advertisements_by_container};
+    use super::{list_images, list_images_by_container};
 
     #[tokio::test]
     async fn test_list_advertisements() {
@@ -52,7 +48,7 @@ mod test {
         let client: Client = Client::new();
 
         // When
-        let result: Result<Vec<Advertisement>> = list_advertisements(&client).await;
+        let result: Result<Vec<Image>> = list_images(&client).await;
 
         // Then
         match result {
@@ -68,8 +64,7 @@ mod test {
         let container_id: u32 = 0;
 
         // When
-        let result: Result<Vec<Advertisement>> =
-            list_advertisements_by_container(&client, container_id).await;
+        let result: Result<Vec<Image>> = list_images_by_container(&client, container_id).await;
 
         // Then
         match result {
