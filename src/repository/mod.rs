@@ -2,18 +2,21 @@
 
 extern crate reqwest;
 
-use crate::types::{Error, ErrorKind, Result};
-use log::{debug, error, trace, warn};
-use rand::{thread_rng, Rng};
-use reqwest::{Client, RequestBuilder, Response, StatusCode};
-use serde::{Deserialize, Serialize};
 use std::borrow::Borrow;
 use std::cmp::min;
 use std::fmt::Debug;
 use std::future::Future;
 use std::thread;
 use std::time::Duration;
+
+use log::{debug, error, trace, warn};
+use rand::{Rng, thread_rng};
+use reqwest::{Client, RequestBuilder, Response, StatusCode};
+use serde::{Deserialize, Serialize};
+
 use types::Wrapper;
+
+use crate::types::{Error, ErrorKind, Result};
 
 pub mod advertisement;
 pub mod image;

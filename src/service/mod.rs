@@ -2,3 +2,4 @@
 
 mod advertisement;
 mod image;
+mod video;

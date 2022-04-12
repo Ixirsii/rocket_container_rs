@@ -1,10 +1,12 @@
 //! Image repository.
 
-use super::get_wrapped_list;
-use super::types::image::{ImageDto, ImagesDto};
-use crate::types::Result;
 use log::trace;
 use reqwest::Client;
+
+use crate::types::Result;
+
+use super::get_wrapped_list;
+use super::types::image::{ImageDto, ImagesDto};
 
 /// Container ID query parameter.
 const CONTAINER_ID: &str = "containerId";
@@ -31,10 +33,12 @@ pub async fn list_images_by_container(client: &Client, container_id: u32) -> Res
 
 #[cfg(test)]
 mod test {
-    use super::{list_images, list_images_by_container};
+    use reqwest::Client;
+
     use crate::repository::types::image::ImageDto;
     use crate::types::Result;
-    use reqwest::Client;
+
+    use super::{list_images, list_images_by_container};
 
     #[tokio::test]
     async fn test_list_images() {

@@ -8,7 +8,7 @@ use crate::repository::image;
 use crate::types::Result;
 
 pub async fn list_images(client: &Client) -> Result<Vec<Image>> {
-    trace!("Listing all advertisements");
+    trace!("Listing all images");
 
     let images: Vec<Image> = image::list_images(client)
         .await?
@@ -20,7 +20,7 @@ pub async fn list_images(client: &Client) -> Result<Vec<Image>> {
 }
 
 pub async fn list_images_by_container(client: &Client, container_id: u32) -> Result<Vec<Image>> {
-    trace!("Listing advertisements by container id {}", container_id);
+    trace!("Listing images by container id {}", container_id);
 
     let images: Vec<Image> = image::list_images_by_container(client, container_id)
         .await?
@@ -43,7 +43,7 @@ mod test {
     use super::{list_images, list_images_by_container};
 
     #[tokio::test]
-    async fn test_list_advertisements() {
+    async fn test_list_images() {
         // Given
         let client: Client = Client::new();
 
@@ -58,7 +58,7 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_list_advertisements_by_container() {
+    async fn test_list_images_by_container() {
         // Given
         let client: Client = Client::new();
         let container_id: u32 = 0;

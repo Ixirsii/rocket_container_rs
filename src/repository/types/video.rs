@@ -83,6 +83,10 @@ impl VideoDto {
             r#type,
         }
     }
+
+    pub fn id(&self) -> &str {
+        &self.id
+    }
 }
 
 impl From<VideoDto> for VideoBuilder {

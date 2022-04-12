@@ -1,10 +1,12 @@
 //! Advertisement repository.
 
-use super::get_wrapped_list;
-use super::types::advertisement::{AdvertisementDto, AdvertisementsDto};
-use crate::types::Result;
 use log::trace;
 use reqwest::Client;
+
+use crate::types::Result;
+
+use super::get_wrapped_list;
+use super::types::advertisement::{AdvertisementDto, AdvertisementsDto};
 
 /// Endpoint for Rocket Advertisement service.
 const ADVERTISEMENT_ENDPOINT: &str =
@@ -83,10 +85,12 @@ pub async fn list_advertisements_by_container(
 
 #[cfg(test)]
 mod test {
-    use super::{list_advertisements, list_advertisements_by_container};
+    use reqwest::Client;
+
     use crate::repository::types::advertisement::AdvertisementDto;
     use crate::types::Result;
-    use reqwest::Client;
+
+    use super::{list_advertisements, list_advertisements_by_container};
 
     #[tokio::test]
     async fn test_list_advertisements() {

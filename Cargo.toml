@@ -12,6 +12,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+futures = "0.3.21"
 log = "0.4.16"
 log4rs = { version = "1.0.0", features = ["console_appender", "fixed_window_roller", "gzip", "rolling_file_appender"] }
 rand = "0.8.5"
@@ -20,3 +21,6 @@ reqwest = { version = "0.11.9", features = ["json"] }
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0.79"
 tokio = { version = "1.17.0", features = ["full"] }
+
+[build]
+rustc-wrapper = "/home/ryan/.cargo/bin/sccache"
