@@ -4,11 +4,20 @@ use serde::{Deserialize, Serialize};
 
 use crate::controller::types::Image;
 
-use super::Wrapper;
-
 /* ****************************************** ImageDto ****************************************** */
 
 /// Image data returned from Rocket Image service.
+///
+/// # Examples
+///
+/// ```rust
+/// use reqwest::Client;
+/// use rocket_stream::repository::image::list_images;
+/// use rocket_stream::repository::types::image::ImageDto;
+///
+/// let client: Client = Client::new();
+//  let images: Vec<ImageDto> = list_images(&client).await.unwrap();
+/// ```
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ImageDto {
@@ -22,19 +31,24 @@ pub struct ImageDto {
     url: String,
 }
 
-impl ImageDto {
-    /// Construct a new Image.
-    pub fn new(container_id: String, id: String, name: String, url: String) -> Self {
-        ImageDto {
-            container_id,
-            id,
-            name,
-            url,
-        }
-    }
-}
-
 impl From<ImageDto> for Image {
+    /// Get an [`Image`][1] from an [`ImageDto`][2].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use rocket_stream::controller::types::Image;
+    ///
+    /// let images: Vec<Image> = list_images(&client)
+    ///     .await?
+    ///     .into_iter()
+    ///     .map(Image::from)
+    ///     .collect();;
+    /// ```
+    ///
+    /// [1]: [crate::types::Image]
+    /// [2]: [crate::repository::types::image::ImageDto]
+    ///
     fn from(image_dto: ImageDto) -> Self {
         Image::new(image_dto.id.parse().unwrap(), image_dto.name, image_dto.url)
     }
@@ -43,23 +57,21 @@ impl From<ImageDto> for Image {
 /* ***************************************** ImagesDto ****************************************** */
 
 /// [Wrapper] for [Image]s.
+///
+/// # Examples
+///
+/// ```rust
+/// use reqwest::Client;
+/// use rocket_stream::repository::types::image::{ImageDto, ImagesDto};
+///
+/// let advertisements: Vec<AdvertisementDto> =
+///     request::<AdvertisementsDto, ()>(client, ADVERTISEMENT_ENDPOINT, None)
+///         .await?
+///         .images;
+/// ```
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ImagesDto {
-    images: Vec<ImageDto>,
-}
-
-impl ImagesDto {
-    /// Construct a new Images wrapper.
-    pub fn new(images: Vec<ImageDto>) -> Self {
-        ImagesDto { images }
-    }
-}
-
-impl Wrapper<ImageDto> for ImagesDto {
-    /// Unwrap [Images::images].
-    fn unwrap(self) -> Vec<ImageDto> {
-        self.images
-    }
+    pub images: Vec<ImageDto>,
 }
 
 /* ******************************************* Tests ******************************************** */
@@ -93,7 +105,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert_eq!(actual, expected),
-            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
+            Err(err) => panic!("Failed to deserialize with error: {}", err),
         }
     }
 
@@ -128,7 +140,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert_eq!(actual, expected),
-            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
+            Err(err) => panic!("Failed to deserialize with error: {}", err),
         }
     }
 
@@ -151,7 +163,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert_eq!(actual, expected),
-            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
+            Err(err) => panic!("Failed to deserialize with error: {}", err),
         }
     }
 
@@ -176,7 +188,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert_eq!(actual, expected),
-            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
+            Err(err) => panic!("Failed to deserialize with error: {}", err),
         }
     }
 }

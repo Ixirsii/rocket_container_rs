@@ -11,6 +11,27 @@ use crate::repository::types::video::VideoDto;
 use crate::repository::video;
 use crate::types::{AssetType, Result, VideoType};
 
+/// Get video by ID from Rocket Video.
+///
+/// # Examples
+///
+/// ```rust
+/// use rocket_stream::service::video::get_video;
+/// use reqwest::Client;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), ()> {
+///     let client = Client::new();
+///     let video_id: u32 = 1;
+///
+///     match get_video(&client, video_id) {
+///         Ok(video) => println!("Got video: {}", video),
+///         Err(_) => println!("Failed to get video"),
+///     };
+///
+///     Ok(())
+/// }
+/// ```
 pub async fn get_video(client: &Client, video_id: u32) -> Result<Video> {
     trace!("Getting video {}", video_id);
 
@@ -22,6 +43,27 @@ pub async fn get_video(client: &Client, video_id: u32) -> Result<Video> {
     Ok(video)
 }
 
+/// List all assets for a video from Rocket Video.
+///
+/// # Examples
+///
+/// ```rust
+/// use rocket_stream::service::video::list_asset_references;
+/// use reqwest::Client;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), ()> {
+///     let client = Client::new();
+///     let video_id: u32 = 1;
+///
+///     match list_asset_references(&client, video_id) {
+///         Ok(assets) => println!("Got assets: {}", assets),
+///         Err(_) => println!("Failed to get assets"),
+///     };
+///
+///     Ok(())
+/// }
+/// ```
 pub async fn list_asset_references(client: &Client, video_id: u32) -> Result<Vec<AssetReference>> {
     trace!("Listing asset references for video {}", video_id);
 
@@ -34,6 +76,27 @@ pub async fn list_asset_references(client: &Client, video_id: u32) -> Result<Vec
     Ok(asset_references)
 }
 
+/// List all assets for a video, by type, from Rocket Video.
+///
+/// # Examples
+///
+/// ```rust
+/// use rocket_stream::service::video::list_asset_references_by_type;
+/// use reqwest::Client;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), ()> {
+///     let client = Client::new();
+///     let video_id: u32 = 1;
+///
+///     match list_asset_references_by_type(&client, video_id) {
+///         Ok(assets) => println!("Got assets: {}", assets),
+///         Err(_) => println!("Failed to get assets"),
+///     };
+///
+///     Ok(())
+/// }
+/// ```
 pub async fn list_asset_references_by_type(
     client: &Client,
     video_id: u32,
@@ -55,6 +118,27 @@ pub async fn list_asset_references_by_type(
     Ok(asset_references)
 }
 
+/// List all videos from Rocket Video.
+///
+/// # Examples
+///
+/// ```rust
+/// use rocket_stream::service::video::list_videos;
+/// use reqwest::Client;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), ()> {
+///     let client = Client::new();
+///     let video_id: u32 = 1;
+///
+///     match list_videos(&client, video_id) {
+///         Ok(videos) => println!("Got videos: {}", videos),
+///         Err(_) => println!("Failed to get video"),
+///     };
+///
+///     Ok(())
+/// }
+/// ```
 pub async fn list_videos(client: &Client) -> Result<Vec<Video>> {
     trace!("Listing all videos");
 
@@ -70,6 +154,27 @@ pub async fn list_videos(client: &Client) -> Result<Vec<Video>> {
     Ok(images)
 }
 
+/// List all videos for a container from Rocket Video.
+///
+/// # Examples
+///
+/// ```rust
+/// use rocket_stream::service::video::list_videos_by_container;
+/// use reqwest::Client;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), ()> {
+///     let client = Client::new();
+///     let video_id: u32 = 1;
+///
+///     match list_videos_by_container(&client, video_id) {
+///         Ok(videos) => println!("Got videos: {}", videos),
+///         Err(_) => println!("Failed to get video"),
+///     };
+///
+///     Ok(())
+/// }
+/// ```
 pub async fn list_videos_by_container(client: &Client, container_id: u32) -> Result<Vec<Video>> {
     trace!("Listing videos by container id {}", container_id);
 
@@ -85,6 +190,27 @@ pub async fn list_videos_by_container(client: &Client, container_id: u32) -> Res
     Ok(images)
 }
 
+/// List all videos by type from Rocket Video.
+///
+/// # Examples
+///
+/// ```rust
+/// use rocket_stream::service::video::list_videos_by_type;
+/// use reqwest::Client;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), ()> {
+///     let client = Client::new();
+///     let video_id: u32 = 1;
+///
+///     match list_videos_by_type(&client, video_id) {
+///         Ok(videos) => println!("Got videos: {}", videos),
+///         Err(_) => println!("Failed to get video"),
+///     };
+///
+///     Ok(())
+/// }
+/// ```
 pub async fn list_videos_by_type(client: &Client, video_type: VideoType) -> Result<Vec<Video>> {
     trace!("Listing videos by type {}", video_type);
 
@@ -100,6 +226,27 @@ pub async fn list_videos_by_type(client: &Client, video_type: VideoType) -> Resu
     Ok(images)
 }
 
+/// List all videos for a container, by type, from Rocket Video.
+///
+/// # Examples
+///
+/// ```rust
+/// use rocket_stream::service::video::list_videos_by_container_and_type;
+/// use reqwest::Client;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), ()> {
+///     let client = Client::new();
+///     let video_id: u32 = 1;
+///
+///     match list_videos_by_container_and_type(&client, video_id) {
+///         Ok(videos) => println!("Got videos: {}", videos),
+///         Err(_) => println!("Failed to get advertisements"),
+///     };
+///
+///     Ok(())
+/// }
+/// ```
 pub async fn list_videos_by_container_and_type(
     client: &Client,
     container_id: u32,
@@ -159,7 +306,7 @@ mod test {
             1301,
             "/path/to/test1301.m3u8".to_string(),
             "My Family".to_string(),
-            VideoType::CLIP,
+            VideoType::Clip,
         );
 
         // When
@@ -168,7 +315,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert_eq!(expected, actual),
-            Err(err) => panic!("Failed to list all advertisements with error: {:#?}", err),
+            Err(err) => panic!("Failed to list all advertisements with error: {}", err),
         }
     }
 
@@ -177,7 +324,7 @@ mod test {
         // Given
         let client: Client = Client::new();
         let video_id: u32 = 1404;
-        let expected: Vec<AssetReference> = vec![AssetReference::new(120, AssetType::IMAGE)];
+        let expected: Vec<AssetReference> = vec![AssetReference::new(120, AssetType::Image)];
 
         // When
         let result: Result<Vec<AssetReference>> = list_asset_references(&client, video_id).await;
@@ -185,17 +332,17 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert_eq!(expected, actual),
-            Err(err) => panic!("Failed to list all advertisements with error: {:#?}", err),
+            Err(err) => panic!("Failed to list all advertisements with error: {}", err),
         }
     }
 
     #[tokio::test]
     async fn test_list_asset_references_by_type() {
         // Given
-        let asset_type: AssetType = AssetType::IMAGE;
+        let asset_type: AssetType = AssetType::Image;
         let client: Client = Client::new();
         let video_id: u32 = 1404;
-        let expected: Vec<AssetReference> = vec![AssetReference::new(120, AssetType::IMAGE)];
+        let expected: Vec<AssetReference> = vec![AssetReference::new(120, AssetType::Image)];
 
         // When
         let result: Result<Vec<AssetReference>> =
@@ -204,7 +351,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert_eq!(expected, actual),
-            Err(err) => panic!("Failed to list all advertisements with error: {:#?}", err),
+            Err(err) => panic!("Failed to list all advertisements with error: {}", err),
         }
     }
 
@@ -219,7 +366,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert!(!actual.is_empty()),
-            Err(err) => panic!("Failed to list all advertisements with error: {:#?}", err),
+            Err(err) => panic!("Failed to list all advertisements with error: {}", err),
         }
     }
 
@@ -235,7 +382,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert!(!actual.is_empty()),
-            Err(err) => panic!("Failed to list advertisements with error: {:#?}", err),
+            Err(err) => panic!("Failed to list advertisements with error: {}", err),
         }
     }
 
@@ -243,7 +390,7 @@ mod test {
     async fn test_list_videos_by_type() {
         // Given
         let client: Client = Client::new();
-        let video_type: VideoType = VideoType::MOVIE;
+        let video_type: VideoType = VideoType::Movie;
 
         // When
         let result: Result<Vec<Video>> = list_videos_by_type(&client, video_type).await;
@@ -251,16 +398,17 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert!(!actual.is_empty()),
-            Err(err) => panic!("Failed to list advertisements with error: {:#?}", err),
+            Err(err) => panic!("Failed to list advertisements with error: {}", err),
         }
     }
 
     #[tokio::test]
     async fn test_list_videos_by_container_and_type() {
         // Given
+        log4rs::init_file("log4rs.yaml", Default::default()).unwrap();
         let client: Client = Client::new();
         let container_id: u32 = 0;
-        let video_type: VideoType = VideoType::MOVIE;
+        let video_type: VideoType = VideoType::Movie;
 
         // When
         let result: Result<Vec<Video>> =
@@ -269,7 +417,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert!(!actual.is_empty()),
-            Err(err) => panic!("Failed to list advertisements with error: {:#?}", err),
+            Err(err) => panic!("Failed to list advertisements with error: {}", err),
         }
     }
 }

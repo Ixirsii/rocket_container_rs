@@ -10,11 +10,9 @@ use std::thread;
 use std::time::Duration;
 
 use log::{debug, error, trace, warn};
-use rand::{Rng, thread_rng};
+use rand::{thread_rng, Rng};
 use reqwest::{Client, RequestBuilder, Response, StatusCode};
 use serde::{Deserialize, Serialize};
-
-use types::Wrapper;
 
 use crate::types::{Error, ErrorKind, Result};
 
@@ -29,6 +27,26 @@ const MAX_ATTEMPTS: u32 = 10;
 /// Maximum backoff delay when retrying a service call.
 const MAX_BACKOFF: u64 = 1_000;
 
+/// Make a GET request.
+///
+/// Makes a GET request based on the provided request builder and checks the response status code.
+///
+/// # Returns
+///
+/// - **200 - OK:** `Ok(response)`
+/// - **400 - Bad Request:** `Err(ErrorKind::Permanent)`
+/// - **500 - Internal Server Error:** `Err(ErrorKind::Transient)`
+/// - **Everything else** - `Err(ErrorKind::Permanent)`
+///
+/// # Examples
+///
+/// ```rust
+/// use reqwest::Client;
+///
+/// let client = Client::new();
+/// let mut request_builder: RequestBuilder = client.get("https://example.com".to_string());
+//  let response: Response = get(request_builder).await?;
+/// ```
 async fn get(request_builder: RequestBuilder) -> Result<Response> {
     match request_builder.send().await {
         Ok(response) => {
@@ -47,23 +65,93 @@ async fn get(request_builder: RequestBuilder) -> Result<Response> {
 }
 
 /// Get backoff/delay to wait before the next retry attempt.
+///
+/// Calculates exponential backoff based on the attempt number using the function:
+/// `min(2^(attempts - 1) + random_number_millis, MAX_BACKOFF)`.
+///
+/// # Examples
+///
+/// ```rust
+/// let backoff: u64 = get_backoff(i);
+/// thread::sleep(Duration::from_millis(backoff));
+/// ```
 fn get_backoff(attempt: u32) -> u64 {
     const BASE: u64 = 2;
-    let exponential_backoff: u64 = BASE.pow(attempt);
-    let random_number_milliseconds: u64 = thread_rng().gen_range(0..100);
-    let backoff: u64 = exponential_backoff + random_number_milliseconds;
+    let exponential_backoff: u64 = BASE.pow(attempt - 1);
+    let random_number_millis: u64 = thread_rng().gen_range(0..100);
+    let backoff: u64 = exponential_backoff + random_number_millis;
 
     min(backoff, MAX_BACKOFF)
 }
 
-async fn get_value<T>(client: &Client, endpoint: &str) -> Result<T>
+/// Make a GET request with exponential backoff and retries on request failures.
+///
+/// Returns the result of calling GET `endpoint`, retrying with exponential backoff on transient
+/// errors.
+///
+/// # Examples
+///
+/// ```rust
+/// use reqwest::Client;
+/// use serde::{Deserialize, Serialize};
+///
+/// #[derive(Deserialize, Serialize)]
+/// pub struct Advertisement {
+///     container_id: u64,
+///     id: u64,
+///     name: String,
+///     url: String,
+/// }
+///
+/// #[derive(Deserialize, Serialize)]
+/// struct Advertisements {
+///     advertisements: Vec<Advertisement>,
+/// }
+///
+/// pub async fn get_advertisement(advertisement_id: u32) -> Result<Advertisement> {
+///     let client = Client::new();
+///
+///     request::<Advertisement, ()>(
+///         &client,
+///         format!(
+///              "{}/{}",
+///              "http://ads.rocket-stream.bottlerocketservices.com/advertisements",
+///              advertisement_id,
+///         ).as_str(),
+///         None,
+///     )
+///     .await
+/// }
+///
+/// pub fn list_advertisements() -> Result<Vec<Advertisement>> {
+///     let client = Client::new();
+///     let container_id = 0;
+///
+///     let advertisements: Vec<Advertisement> =
+///         request::<Advertisement, Advertisements, [(&str, u32); 1]>(
+///             &client,
+///             "http://ads.rocket-stream.bottlerocketservices.com/advertisements",
+///             Some([("containerId", container_id)]),
+///         )
+///         .await?
+///         .advertisements;
+///
+///    Ok(advertisements)
+/// }
+/// ```
+async fn request<T, Q>(client: &Client, endpoint: &str, query: Option<Q>) -> Result<T>
 where
     T: for<'de> Deserialize<'de>,
+    Q: Debug + Serialize,
 {
-    trace!("Getting {}", endpoint);
+    trace!("Getting {}?{:#?}", endpoint, query);
 
     let op = || async {
-        let request_builder: RequestBuilder = client.get(endpoint);
+        let mut request_builder: RequestBuilder = client.get(endpoint);
+
+        if query.is_some() {
+            request_builder = request_builder.query(query.borrow());
+        }
 
         debug!("Making GET request {:#?}", request_builder);
 
@@ -78,80 +166,36 @@ where
     retry(op).await
 }
 
-/// Make a GET request with exponential backoff and retries on request failures.
+/// Retry an operation with exponential backoff.
 ///
+/// Takes an operation which returns [`Result`][1]<T, [`Error`][2]>. If the operations returns [Ok]
+/// then this function returns the same value. If the operation returns [Err] of
+/// [`ErrorKind::Permanent`] then the error is returned. However if the operation returns [Err] of
+/// [`ErrorKind::Transient`] then the operation is retried up to [`MAX_ATTEMPTS`] times.
+///  
 /// # Examples
 ///
 /// ```rust
-/// use reqwest::Client;
-/// use serde::{Deserialize, Serialize};
+/// let op = || async {
+/// let mut request_builder: RequestBuilder = client.get(endpoint);
 ///
-/// #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
-/// pub struct Advertisement {
-///     container_id: u64,
-///     id: u64,
-///     name: String,
-///     url: String,
+/// if query.is_some() {
+///     request_builder = request_builder.query(query.borrow());
 /// }
 ///
-/// #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
-/// struct Advertisements {
-///     advertisements: Vec<Advertisement>,
-/// }
+/// let response: Response = get(request_builder).await?;
 ///
-/// pub fn list_advertisements() -> Result<Vec<Advertisement>> {
-///     let client = Client::new();
+/// match response.json::<T>().await {
+///     Ok(result) => Ok(result),
+///         Err(err) => Err(Error::new(ErrorKind::Permanent, &err.to_string())),
+///     }
+/// };
 ///
-///     get::<Advertisement, Advertisements, ()>(
-///         &client,
-///         "http://ads.rocket-stream.bottlerocketservices.com/advertisements",
-///         None,
-///     )
-/// }
-///
-/// pub fn list_advertisements() -> Result<Vec<Advertisement>> {
-///     let client = Client::new();
-///     let container_id = 0;
-///
-///     get::<Advertisement, Advertisements, [(&str, u32); 1]>(
-///         &client,
-///         "http://ads.rocket-stream.bottlerocketservices.com/advertisements",
-///         Some([("containerId", container_id)]),
-///     )
-/// }
+/// retry(op).await
 /// ```
-async fn get_wrapped_list<T, W, Q>(
-    client: &Client,
-    endpoint: &str,
-    query: Option<Q>,
-) -> Result<Vec<T>>
-where
-    W: Wrapper<T> + for<'de> Deserialize<'de>,
-    Q: Debug + Serialize,
-{
-    trace!("Getting {} ? {:#?}", endpoint, query.as_ref().unwrap());
-
-    let op = || async {
-        let mut request_builder: RequestBuilder = client.get(endpoint);
-
-        if query.is_some() {
-            request_builder = request_builder.query(query.borrow());
-        }
-
-        debug!("Making GET request {:#?}", request_builder);
-
-        let response: Response = get(request_builder).await?;
-
-        match response.json::<W>().await {
-            Ok(result) => Ok(result.unwrap()),
-            Err(err) => Err(Error::new(ErrorKind::Permanent, &err.to_string())),
-        }
-    };
-
-    retry(op).await
-}
-
-/// Calls a function and retries if the function fails.
+///
+/// [1]: crate::types::Result
+/// [2]: crate::types::Error
 async fn retry<I, F, Fut>(mut f: F) -> Result<I>
 where
     F: FnMut() -> Fut,
@@ -164,11 +208,11 @@ where
             Ok(data) => return Ok(data),
             Err(err) => {
                 if err.kind == ErrorKind::Permanent {
-                    error!("Attempt #{} returned with un-retryable error {:#?}", i, err);
+                    error!("Attempt #{} returned with un-retryable error {}", i, err);
 
                     return Err(err);
                 } else {
-                    warn!("Attempt #{} returned with retryable error {:#?}", i, err);
+                    warn!("Attempt #{} returned with retryable error {}", i, err);
                 }
             }
         }

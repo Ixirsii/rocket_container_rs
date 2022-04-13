@@ -5,8 +5,8 @@ use reqwest::Client;
 
 use crate::types::Result;
 
-use super::get_wrapped_list;
-use super::types::advertisement::{AdvertisementDto, AdvertisementsDto};
+use crate::repository::request;
+use crate::repository::types::advertisement::{AdvertisementDto, AdvertisementsDto};
 
 /// Endpoint for Rocket Advertisement service.
 const ADVERTISEMENT_ENDPOINT: &str =
@@ -20,7 +20,7 @@ const CONTAINER_ID: &str = "containerId";
 /// # Examples
 ///
 /// ```rust
-/// use crate::temp::list_all_advertisements;
+/// use rocket_stream::repository::advertisement::list_advertisements;
 /// use reqwest::Client;
 ///
 /// #[tokio::main]
@@ -28,7 +28,7 @@ const CONTAINER_ID: &str = "containerId";
 ///     let client = Client::new();
 ///
 ///     match list_advertisements(&client) {
-///         Ok(advertisements) => println!("Got advertisements: {:#?}", advertisements),
+///         Ok(advertisements) => println!("Got advertisements: {}", advertisements),
 ///         Err(_) => println!("Failed to get advertisements"),
 ///     };
 ///
@@ -38,12 +38,12 @@ const CONTAINER_ID: &str = "containerId";
 pub async fn list_advertisements(client: &Client) -> Result<Vec<AdvertisementDto>> {
     trace!("Listing all advertisements");
 
-    get_wrapped_list::<AdvertisementDto, AdvertisementsDto, ()>(
-        client,
-        ADVERTISEMENT_ENDPOINT,
-        None,
-    )
-    .await
+    let advertisements: Vec<AdvertisementDto> =
+        request::<AdvertisementsDto, ()>(client, ADVERTISEMENT_ENDPOINT, None)
+            .await?
+            .advertisements;
+
+    Ok(advertisements)
 }
 
 /// List advertisements for a container from Rocket Advertisement.
@@ -51,7 +51,7 @@ pub async fn list_advertisements(client: &Client) -> Result<Vec<AdvertisementDto
 /// # Examples
 ///
 /// ```rust
-/// use crate::temp::list_advertisements;
+/// use rocket_stream::repository::advertisement::list_advertisements_by_container;
 /// use reqwest::Client;
 ///
 /// #[tokio::main]
@@ -73,12 +73,15 @@ pub async fn list_advertisements_by_container(
 ) -> Result<Vec<AdvertisementDto>> {
     trace!("Listing advertisements for container {}", container_id);
 
-    get_wrapped_list::<AdvertisementDto, AdvertisementsDto, [(&str, u32); 1]>(
+    let advertisements: Vec<AdvertisementDto> = request::<AdvertisementsDto, [(&str, u32); 1]>(
         client,
         ADVERTISEMENT_ENDPOINT,
         Some([(CONTAINER_ID, container_id)]),
     )
-    .await
+    .await?
+    .advertisements;
+
+    Ok(advertisements)
 }
 
 /* ******************************************* Tests ******************************************** */
@@ -103,7 +106,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert!(!actual.is_empty()),
-            Err(err) => panic!("Failed to list all advertisements with error: {:#?}", err),
+            Err(err) => panic!("Failed to list all advertisements with error: {}", err),
         }
     }
 
@@ -120,7 +123,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert!(!actual.is_empty()),
-            Err(err) => panic!("Failed to list advertisements with error: {:#?}", err),
+            Err(err) => panic!("Failed to list advertisements with error: {}", err),
         }
     }
 }

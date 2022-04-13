@@ -1,6 +1,5 @@
 //! Video data transfer object type definitions.
 
-use super::Wrapper;
 use crate::controller::types::{AssetReference, Video, VideoBuilder};
 use crate::types::{AssetType, VideoType};
 use serde::{Deserialize, Serialize};
@@ -11,6 +10,20 @@ use serde::{Deserialize, Serialize};
 ///
 /// [Video]s can have assets associated with them such as promotional images and advertisements.
 /// This is a generic pointer to those assets.
+///
+/// # Examples
+///
+/// ```rust
+/// use reqwest::Client;
+/// use rocket_stream::repository::video::list_asset_references;
+/// use rocket_stream::repository::types::video::AssetReferenceDto;
+///
+/// let client: Client = Client::new();
+/// let video_id: u32 = 1404;
+/// let advertisements: Vec<AdvertisementDto> = list_asset_references(&client, video_id)
+///     .await
+///     .unwrap();
+/// ```
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AssetReferenceDto {
@@ -24,6 +37,18 @@ pub struct AssetReferenceDto {
 
 impl AssetReferenceDto {
     /// Construct a new AssetReference.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use rocket_stream::repository::types::video::AssetReferenceDto;
+    ///
+    /// AssetReferenceDto::new(
+    ///     "120".to_string(),
+    ///     AssetType::IMAGE,
+    ///     "1404".to_string(),
+    /// )
+    /// ```
     pub fn new(asset_id: String, asset_type: AssetType, video_id: String) -> Self {
         AssetReferenceDto {
             asset_id,
@@ -34,6 +59,23 @@ impl AssetReferenceDto {
 }
 
 impl From<AssetReferenceDto> for AssetReference {
+    /// Get an [AssetReference] from an [AssetReferenceDto].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use reqwest::Client;
+    /// use rocket_stream::controller::types::AssetReference;
+    /// use rocket_stream::repository::video::list_asset_references;
+    ///
+    /// let client: Client = Client::new();
+    /// let video_id: u32 = 1404;
+    /// let advertisements: Vec<AssetReference> = list_asset_references(&client)
+    ///     .await?
+    ///     .into_iter()
+    ///     .map(AssetReference::from)
+    ///     .collect();
+    /// ```
     fn from(asset_reference_dto: AssetReferenceDto) -> Self {
         AssetReference::new(
             asset_reference_dto.asset_id.parse().unwrap(),
@@ -43,6 +85,17 @@ impl From<AssetReferenceDto> for AssetReference {
 }
 
 /// Video data returned from Rocket Video service.
+///
+/// # Examples
+///
+/// ```rust
+/// use reqwest::Client;
+/// use rocket_stream::repository::video::list_videos;
+/// use rocket_stream::repository::types::video::VideoDto;
+///
+/// let client: Client = Client::new();
+/// let advertisements: Vec<AdvertisementDto> = list_videos(&client).await.unwrap();
+/// ```
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct VideoDto {
@@ -64,6 +117,23 @@ pub struct VideoDto {
 
 impl VideoDto {
     /// Construct a new Video.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use rocket_stream::repository::types::video::VideoDto;
+    ///
+    /// let expected: VideoDto = VideoDto::new(
+    ///     "25".to_string(),
+    ///     "Etiam vel augue. Vestibulum rutrum rutrum neque. Aenean auctor gravida sem."
+    ///         .to_string(),
+    ///     "".to_string(),
+    ///     "1301".to_string(),
+    ///     "/path/to/test1301.m3u8".to_string(),
+    ///     "My Family".to_string(),
+    ///     VideoType::CLIP,
+    /// );
+    /// ```
     pub fn new(
         container_id: String,
         description: String,
@@ -84,12 +154,38 @@ impl VideoDto {
         }
     }
 
+    /// Get Video ID.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use rocket_stream::repository::types::video::VideoDto;
+    ///
+    /// let video: VideoDto = ...;
+    /// let video_id: &str = video.id();
+    /// ```
     pub fn id(&self) -> &str {
         &self.id
     }
 }
 
 impl From<VideoDto> for VideoBuilder {
+    /// Get a [Video] from a [VideoDto].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use reqwest::Client;
+    /// use rocket_stream::controller::types::Video;
+    /// use rocket_stream::repository::video::list_videos;
+    ///
+    /// let client: Client = Client::new();
+    /// let videos: Vec<Video> = list_videos(&client)
+    ///     .await?
+    ///     .into_iter()
+    ///     .map(Video::from)
+    ///     .collect();
+    /// ```
     fn from(video_dto: VideoDto) -> VideoBuilder {
         Video::builder(video_dto.id.parse().unwrap())
             .description(video_dto.description)
@@ -101,44 +197,42 @@ impl From<VideoDto> for VideoBuilder {
 }
 
 /// [Wrapper] for [Video]s.
+///
+/// # Examples
+///
+/// ```rust
+/// use reqwest::Client;
+/// use rocket_stream::repository::request;
+/// use rocket_stream::repository::types::advertisement::{AssetReferenceDto, VideoAssetsDto};
+///
+/// let advertisements: Vec<AssetReferenceDto> =
+///     request::<VideoAssetsDto, ()>(client, VIDEO_ENDPOINT, None)
+///         .await?
+///         .video_assets;
+/// ```
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct VideoAssetsDto {
-    video_assets: Vec<AssetReferenceDto>,
-}
-
-impl VideoAssetsDto {
-    /// Construct a new VideoAssets wrapper.
-    pub fn new(video_assets: Vec<AssetReferenceDto>) -> Self {
-        VideoAssetsDto { video_assets }
-    }
-}
-
-impl Wrapper<AssetReferenceDto> for VideoAssetsDto {
-    /// Unwrap [VideoAssets::video_assets].
-    fn unwrap(self) -> Vec<AssetReferenceDto> {
-        self.video_assets
-    }
+    pub video_assets: Vec<AssetReferenceDto>,
 }
 
 /// [Wrapper] for [Video]s.
+///
+/// # Examples
+///
+/// ```rust
+/// use reqwest::Client;
+/// use rocket_stream::repository::request;
+/// use rocket_stream::repository::types::advertisement::{VideoDto, VideosDto};
+///
+/// let advertisements: Vec<VideoDto> =
+///     request::<VideosDto, ()>(client, VIDEO_ENDPOINT, None)
+///         .await?
+///         .videos;
+/// ```
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct VideosDto {
-    videos: Vec<VideoDto>,
-}
-
-impl VideosDto {
-    /// Construct a new Videos wrapper.
-    pub fn new(videos: Vec<VideoDto>) -> Self {
-        VideosDto { videos }
-    }
-}
-
-impl Wrapper<VideoDto> for VideosDto {
-    /// Unwrap [Videos::videos].
-    fn unwrap(self) -> Vec<VideoDto> {
-        self.videos
-    }
+    pub videos: Vec<VideoDto>,
 }
 
 /* ******************************************* Tests ******************************************** */
@@ -161,7 +255,7 @@ mod test {
 
         let expected: AssetReferenceDto = AssetReferenceDto {
             asset_id: 0.to_string(),
-            asset_type: AssetType::AD,
+            asset_type: AssetType::Ad,
             video_id: 0.to_string(),
         };
 
@@ -171,7 +265,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert_eq!(actual, expected),
-            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
+            Err(err) => panic!("Failed to deserialize with error: {}", err),
         }
     }
 
@@ -197,7 +291,7 @@ mod test {
             id: 0.to_string(),
             playback_url: "https://www.youtube.com/watch?v=00000000000".to_string(),
             title: "Video".to_string(),
-            r#type: VideoType::CLIP,
+            r#type: VideoType::Clip,
         };
 
         // When
@@ -206,7 +300,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert_eq!(actual, expected),
-            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
+            Err(err) => panic!("Failed to deserialize with error: {}", err),
         }
     }
 
@@ -237,7 +331,7 @@ mod test {
                 id: 0.to_string(),
                 playback_url: "https://www.youtube.com/watch?v=00000000000".to_string(),
                 title: "Video".to_string(),
-                r#type: VideoType::CLIP,
+                r#type: VideoType::Clip,
             }]),
         };
 
@@ -247,7 +341,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert_eq!(actual, expected),
-            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
+            Err(err) => panic!("Failed to deserialize with error: {}", err),
         }
     }
 
@@ -256,7 +350,7 @@ mod test {
         // Given
         let data: AssetReferenceDto = AssetReferenceDto {
             asset_id: 0.to_string(),
-            asset_type: AssetType::AD,
+            asset_type: AssetType::Ad,
             video_id: 0.to_string(),
         };
 
@@ -268,7 +362,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert_eq!(actual, expected),
-            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
+            Err(err) => panic!("Failed to deserialize with error: {}", err),
         }
     }
 
@@ -282,7 +376,7 @@ mod test {
             id: 0.to_string(),
             playback_url: "https://www.youtube.com/watch?v=00000000000".to_string(),
             title: "Video".to_string(),
-            r#type: VideoType::CLIP,
+            r#type: VideoType::Clip,
         };
 
         let expected: &str = "\
@@ -303,7 +397,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert_eq!(actual, expected),
-            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
+            Err(err) => panic!("Failed to deserialize with error: {}", err),
         }
     }
 
@@ -318,7 +412,7 @@ mod test {
                 id: 0.to_string(),
                 playback_url: "https://www.youtube.com/watch?v=00000000000".to_string(),
                 title: "Video".to_string(),
-                r#type: VideoType::CLIP,
+                r#type: VideoType::Clip,
             }]),
         };
 
@@ -344,7 +438,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert_eq!(actual, expected),
-            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
+            Err(err) => panic!("Failed to deserialize with error: {}", err),
         }
     }
 }

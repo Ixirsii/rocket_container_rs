@@ -4,11 +4,20 @@ use serde::{Deserialize, Serialize};
 
 use crate::controller::types::Advertisement;
 
-use super::Wrapper;
-
 /* ************************************** AdvertisementDto ************************************** */
 
 /// Advertisement data returned from Rocket Advertisement service.
+///
+/// # Examples
+///
+/// ```rust
+/// use reqwest::Client;
+/// use rocket_stream::repository::advertisement::list_advertisements;
+/// use rocket_stream::repository::types::advertisement::AdvertisementDto;
+///
+/// let client: Client = Client::new();
+//  let advertisements: Vec<AdvertisementDto> = list_advertisements(&client).await.unwrap();
+/// ```
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AdvertisementDto {
@@ -22,19 +31,25 @@ pub struct AdvertisementDto {
     url: String,
 }
 
-impl AdvertisementDto {
-    /// Constructs a new Advertisement.
-    pub fn new(container_id: String, id: String, name: String, url: String) -> Self {
-        AdvertisementDto {
-            container_id,
-            id,
-            name,
-            url,
-        }
-    }
-}
-
 impl From<AdvertisementDto> for Advertisement {
+    /// Get an [`Advertisement`][1] from an [`AdvertisementDto`][2].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use rocket_stream::controller::types::Advertisement;
+    /// use rocket_stream::repository::advertisement::list_advertisements;
+    ///
+    /// let advertisements: Vec<Advertisement> = list_advertisements(&client)
+    ///     .await?
+    ///     .into_iter()
+    ///     .map(Advertisement::from)
+    ///     .collect();;
+    /// ```
+    ///
+    /// [1]: [crate::types::Advertisement]
+    /// [2]: [crate::repository::types::advertisement::AdvertisementDto]
+    ///
     fn from(advertisement_dto: AdvertisementDto) -> Self {
         Advertisement::new(
             advertisement_dto.id.parse().unwrap(),
@@ -47,23 +62,22 @@ impl From<AdvertisementDto> for Advertisement {
 /* ************************************* AdvertisementsDto ************************************** */
 
 /// [Wrapper] for [Advertisement]s.
+///
+/// # Examples
+///
+/// ```rust
+/// use reqwest::Client;
+/// use rocket_stream::repository::request;
+/// use rocket_stream::repository::types::advertisement::{AdvertisementDto, AdvertisementsDto};
+///
+/// let advertisements: Vec<AdvertisementDto> =
+///     request::<AdvertisementsDto, ()>(client, ADVERTISEMENT_ENDPOINT, None)
+///         .await?
+///         .advertisements;
+/// ```
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct AdvertisementsDto {
-    advertisements: Vec<AdvertisementDto>,
-}
-
-impl AdvertisementsDto {
-    /// Construct a new Advertisements wrapper.
-    pub fn new(advertisements: Vec<AdvertisementDto>) -> Self {
-        AdvertisementsDto { advertisements }
-    }
-}
-
-impl Wrapper<AdvertisementDto> for AdvertisementsDto {
-    /// Unwrap [Advertisements::advertisements].
-    fn unwrap(self) -> Vec<AdvertisementDto> {
-        self.advertisements
-    }
+    pub advertisements: Vec<AdvertisementDto>,
 }
 
 /* ******************************************* Tests ******************************************** */
@@ -97,7 +111,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert_eq!(actual, expected),
-            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
+            Err(err) => panic!("Failed to deserialize with error: {}", err),
         }
     }
 
@@ -132,7 +146,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert_eq!(actual, expected),
-            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
+            Err(err) => panic!("Failed to deserialize with error: {}", err),
         }
     }
 
@@ -161,7 +175,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert_eq!(actual, expected),
-            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
+            Err(err) => panic!("Failed to deserialize with error: {}", err),
         }
     }
 
@@ -196,7 +210,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert_eq!(actual, expected),
-            Err(err) => panic!("Failed to deserialize with error: {:#?}", err),
+            Err(err) => panic!("Failed to deserialize with error: {}", err),
         }
     }
 }

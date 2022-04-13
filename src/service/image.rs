@@ -7,6 +7,26 @@ use crate::controller::types::Image;
 use crate::repository::image;
 use crate::types::Result;
 
+/// List all images from Rocket Image.
+///
+/// # Examples
+///
+/// ```rust
+/// use rocket_stream::service::image::list_images;
+/// use reqwest::Client;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), ()> {
+///     let client = Client::new();
+///
+///     match list_images(&client) {
+///         Ok(images) => println!("Got images: {}", images),
+///         Err(_) => println!("Failed to get images"),
+///     };
+///
+///     Ok(())
+/// }
+/// ```
 pub async fn list_images(client: &Client) -> Result<Vec<Image>> {
     trace!("Listing all images");
 
@@ -19,6 +39,26 @@ pub async fn list_images(client: &Client) -> Result<Vec<Image>> {
     Ok(images)
 }
 
+/// List images for a container from Rocket Image.
+///
+/// # Examples
+///
+/// ```rust
+/// use rocket_stream::service::image::list_images_by_container;
+/// use reqwest::Client;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), ()> {
+///     let client = Client::new();
+///
+///     match list_images_by_container(&client) {
+///         Ok(images) => println!("Got images: {}", images),
+///         Err(_) => println!("Failed to get images"),
+///     };
+///
+///     Ok(())
+/// }
+/// ```
 pub async fn list_images_by_container(client: &Client, container_id: u32) -> Result<Vec<Image>> {
     trace!("Listing images by container id {}", container_id);
 
@@ -53,7 +93,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert!(!actual.is_empty()),
-            Err(err) => panic!("Failed to list all advertisements with error: {:#?}", err),
+            Err(err) => panic!("Failed to list all advertisements with error: {}", err),
         }
     }
 
@@ -69,7 +109,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert!(!actual.is_empty()),
-            Err(err) => panic!("Failed to list advertisements with error: {:#?}", err),
+            Err(err) => panic!("Failed to list advertisements with error: {}", err),
         }
     }
 }
