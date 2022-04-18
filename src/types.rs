@@ -130,8 +130,8 @@ impl Error {
 impl Display for AssetType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            AssetType::Ad => write!(f, "Ad"),
-            AssetType::Image => write!(f, "Image"),
+            AssetType::Ad => write!(f, "AD"),
+            AssetType::Image => write!(f, "IMAGE"),
         }
     }
 }
@@ -154,9 +154,9 @@ impl Display for ErrorKind {
 impl Display for VideoType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            VideoType::Clip => write!(f, "Clip"),
-            VideoType::Episode => write!(f, "Episode"),
-            VideoType::Movie => write!(f, "Movie"),
+            VideoType::Clip => write!(f, "CLIP"),
+            VideoType::Episode => write!(f, "EPISODE"),
+            VideoType::Movie => write!(f, "MOVIE"),
         }
     }
 }
