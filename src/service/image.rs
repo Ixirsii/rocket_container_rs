@@ -4,7 +4,8 @@ use log::trace;
 use reqwest::Client;
 
 use crate::repository::image;
-use crate::service::types::image::Image;
+use crate::service::group;
+use crate::service::types::image::{Image, ImageMap};
 use crate::types::Result;
 
 /// List all images from Rocket Image.
@@ -27,16 +28,16 @@ use crate::types::Result;
 ///     Ok(())
 /// }
 /// ```
-pub async fn list_images(client: &Client) -> Result<Vec<Image>> {
+pub async fn list_images(client: &Client) -> Result<ImageMap> {
     trace!("Listing all images");
 
-    let images: Vec<Image> = image::list_images(client)
+    let images: Vec<(u32, Image)> = image::list_images(client)
         .await?
         .into_iter()
-        .map(Image::from)
+        .map(|image| (image.container_id().parse().unwrap(), Image::from(image)))
         .collect();
 
-    Ok(images)
+    Ok(group(images.into_iter()))
 }
 
 /// List images for a container from Rocket Image.
@@ -59,16 +60,16 @@ pub async fn list_images(client: &Client) -> Result<Vec<Image>> {
 ///     Ok(())
 /// }
 /// ```
-pub async fn list_images_by_container(client: &Client, container_id: u32) -> Result<Vec<Image>> {
+pub async fn list_images_by_container(client: &Client, container_id: u32) -> Result<ImageMap> {
     trace!("Listing images by container id {}", container_id);
 
-    let images: Vec<Image> = image::list_images_by_container(client, container_id)
+    let images: Vec<(u32, Image)> = image::list_images_by_container(client, container_id)
         .await?
         .into_iter()
-        .map(Image::from)
+        .map(|image| (image.container_id().parse().unwrap(), Image::from(image)))
         .collect();
 
-    Ok(images)
+    Ok(group(images.into_iter()))
 }
 
 /* ******************************************* Tests ******************************************** */
@@ -77,7 +78,7 @@ pub async fn list_images_by_container(client: &Client, container_id: u32) -> Res
 mod test {
     use reqwest::Client;
 
-    use crate::service::types::image::Image;
+    use crate::service::types::image::ImageMap;
     use crate::types::Result;
 
     use super::{list_images, list_images_by_container};
@@ -88,7 +89,7 @@ mod test {
         let client: Client = Client::new();
 
         // When
-        let result: Result<Vec<Image>> = list_images(&client).await;
+        let result: Result<ImageMap> = list_images(&client).await;
 
         // Then
         match result {
@@ -104,7 +105,7 @@ mod test {
         let container_id: u32 = 0;
 
         // When
-        let result: Result<Vec<Image>> = list_images_by_container(&client, container_id).await;
+        let result: Result<ImageMap> = list_images_by_container(&client, container_id).await;
 
         // Then
         match result {

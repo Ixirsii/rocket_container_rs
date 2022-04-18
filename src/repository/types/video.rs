@@ -169,6 +169,10 @@ impl VideoDto {
         }
     }
 
+    pub fn container_id(&self) -> &str {
+        &self.container_id
+    }
+
     /// Get Video ID.
     ///
     /// # Examples

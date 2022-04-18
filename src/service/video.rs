@@ -8,7 +8,8 @@ use reqwest::Client;
 
 use crate::repository::types::video::VideoDto;
 use crate::repository::video;
-use crate::service::types::video::{AssetReference, Video, VideoBuilder};
+use crate::service::group;
+use crate::service::types::video::{AssetReference, Video, VideoBuilder, VideoMap};
 use crate::types::{AssetType, Result, VideoType};
 
 /// Get video by ID from Rocket Video.
@@ -139,10 +140,10 @@ pub async fn list_asset_references_by_type(
 ///     Ok(())
 /// }
 /// ```
-pub async fn list_videos(client: &Client) -> Result<Vec<Video>> {
+pub async fn list_videos(client: &Client) -> Result<VideoMap> {
     trace!("Listing all videos");
 
-    let images: Vec<Video> = future::try_join_all(
+    let images: Vec<(u32, Video)> = future::try_join_all(
         video::list_videos(client)
             .await?
             .into_iter()
@@ -151,7 +152,7 @@ pub async fn list_videos(client: &Client) -> Result<Vec<Video>> {
     .await
     .unwrap();
 
-    Ok(images)
+    Ok(group(images.into_iter()))
 }
 
 /// List all videos for a container from Rocket Video.
@@ -175,10 +176,10 @@ pub async fn list_videos(client: &Client) -> Result<Vec<Video>> {
 ///     Ok(())
 /// }
 /// ```
-pub async fn list_videos_by_container(client: &Client, container_id: u32) -> Result<Vec<Video>> {
+pub async fn list_videos_by_container(client: &Client, container_id: u32) -> Result<VideoMap> {
     trace!("Listing videos by container id {}", container_id);
 
-    let images: Vec<Video> = future::try_join_all(
+    let images: Vec<(u32, Video)> = future::try_join_all(
         video::list_videos_by_container(client, container_id)
             .await?
             .into_iter()
@@ -187,7 +188,7 @@ pub async fn list_videos_by_container(client: &Client, container_id: u32) -> Res
     .await
     .unwrap();
 
-    Ok(images)
+    Ok(group(images.into_iter()))
 }
 
 /// List all videos by type from Rocket Video.
@@ -211,10 +212,10 @@ pub async fn list_videos_by_container(client: &Client, container_id: u32) -> Res
 ///     Ok(())
 /// }
 /// ```
-pub async fn list_videos_by_type(client: &Client, video_type: VideoType) -> Result<Vec<Video>> {
+pub async fn list_videos_by_type(client: &Client, video_type: VideoType) -> Result<VideoMap> {
     trace!("Listing videos by type {}", video_type);
 
-    let images: Vec<Video> = future::try_join_all(
+    let images: Vec<(u32, Video)> = future::try_join_all(
         video::list_videos_by_type(client, video_type)
             .await?
             .into_iter()
@@ -223,7 +224,7 @@ pub async fn list_videos_by_type(client: &Client, video_type: VideoType) -> Resu
     .await
     .unwrap();
 
-    Ok(images)
+    Ok(group(images.into_iter()))
 }
 
 /// List all videos for a container, by type, from Rocket Video.
@@ -251,14 +252,14 @@ pub async fn list_videos_by_container_and_type(
     client: &Client,
     container_id: u32,
     video_type: VideoType,
-) -> Result<Vec<Video>> {
+) -> Result<VideoMap> {
     trace!(
         "Listing videos by container {} and type {}",
         container_id,
         video_type
     );
 
-    let images: Vec<Video> = future::try_join_all(
+    let images: Vec<(u32, Video)> = future::try_join_all(
         video::list_videos_by_container_and_type(client, container_id, video_type)
             .await?
             .into_iter()
@@ -267,16 +268,19 @@ pub async fn list_videos_by_container_and_type(
     .await
     .unwrap();
 
-    Ok(images)
+    Ok(group(images.into_iter()))
 }
 
 /* ********************************** Private utility function ********************************** */
 
-async fn map_video(client: &Client, video_dto: VideoDto) -> Result<Video> {
+async fn map_video(client: &Client, video_dto: VideoDto) -> Result<(u32, Video)> {
     let assets: Vec<AssetReference> =
         list_asset_references(client, video_dto.id().parse().unwrap()).await?;
 
-    Ok(VideoBuilder::from(video_dto).assets(assets).build())
+    Ok((
+        video_dto.container_id().parse().unwrap(),
+        VideoBuilder::from(video_dto).assets(assets).build(),
+    ))
 }
 
 /* ******************************************* Tests ******************************************** */
@@ -285,7 +289,7 @@ async fn map_video(client: &Client, video_dto: VideoDto) -> Result<Video> {
 mod test {
     use reqwest::Client;
 
-    use crate::service::types::video::{AssetReference, Video};
+    use crate::service::types::video::{AssetReference, Video, VideoMap};
     use crate::types::{AssetType, Result, VideoType};
 
     use super::{
@@ -315,7 +319,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert_eq!(expected, actual),
-            Err(err) => panic!("Failed to list all advertisements with error: {}", err),
+            Err(err) => panic!("Failed to get video with error: {}", err),
         }
     }
 
@@ -332,7 +336,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert_eq!(expected, actual),
-            Err(err) => panic!("Failed to list all advertisements with error: {}", err),
+            Err(err) => panic!("Failed to list asset references with error: {}", err),
         }
     }
 
@@ -351,7 +355,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert_eq!(expected, actual),
-            Err(err) => panic!("Failed to list all advertisements with error: {}", err),
+            Err(err) => panic!("Failed to list asset references with error: {}", err),
         }
     }
 
@@ -361,12 +365,12 @@ mod test {
         let client: Client = Client::new();
 
         // When
-        let result: Result<Vec<Video>> = list_videos(&client).await;
+        let result: Result<VideoMap> = list_videos(&client).await;
 
         // Then
         match result {
             Ok(actual) => assert!(!actual.is_empty()),
-            Err(err) => panic!("Failed to list all advertisements with error: {}", err),
+            Err(err) => panic!("Failed to list videos with error: {}", err),
         }
     }
 
@@ -377,12 +381,12 @@ mod test {
         let container_id: u32 = 0;
 
         // When
-        let result: Result<Vec<Video>> = list_videos_by_container(&client, container_id).await;
+        let result: Result<VideoMap> = list_videos_by_container(&client, container_id).await;
 
         // Then
         match result {
             Ok(actual) => assert!(!actual.is_empty()),
-            Err(err) => panic!("Failed to list advertisements with error: {}", err),
+            Err(err) => panic!("Failed to list videos with error: {}", err),
         }
     }
 
@@ -393,31 +397,30 @@ mod test {
         let video_type: VideoType = VideoType::Movie;
 
         // When
-        let result: Result<Vec<Video>> = list_videos_by_type(&client, video_type).await;
+        let result: Result<VideoMap> = list_videos_by_type(&client, video_type).await;
 
         // Then
         match result {
             Ok(actual) => assert!(!actual.is_empty()),
-            Err(err) => panic!("Failed to list advertisements with error: {}", err),
+            Err(err) => panic!("Failed to list videos with error: {}", err),
         }
     }
 
     #[tokio::test]
     async fn test_list_videos_by_container_and_type() {
         // Given
-        log4rs::init_file("log4rs.yaml", Default::default()).unwrap();
         let client: Client = Client::new();
         let container_id: u32 = 0;
         let video_type: VideoType = VideoType::Movie;
 
         // When
-        let result: Result<Vec<Video>> =
+        let result: Result<VideoMap> =
             list_videos_by_container_and_type(&client, container_id, video_type).await;
 
         // Then
         match result {
             Ok(actual) => assert!(!actual.is_empty()),
-            Err(err) => panic!("Failed to list advertisements with error: {}", err),
+            Err(err) => panic!("Failed to list videos with error: {}", err),
         }
     }
 }

@@ -33,6 +33,12 @@ pub struct AdvertisementDto {
     url: String,
 }
 
+impl AdvertisementDto {
+    pub fn container_id(&self) -> &str {
+        &self.container_id
+    }
+}
+
 impl From<AdvertisementDto> for Advertisement {
     /// Get an [`Advertisement`][1] from an [`AdvertisementDto`][2].
     ///

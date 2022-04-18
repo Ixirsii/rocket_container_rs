@@ -4,7 +4,8 @@ use log::trace;
 use reqwest::Client;
 
 use crate::repository::advertisement;
-use crate::service::types::advertisement::Advertisement;
+use crate::service::group;
+use crate::service::types::advertisement::{Advertisement, AdvertisementMap};
 use crate::types::Result;
 
 /// List all advertisements from Rocket Advertisement.
@@ -27,16 +28,21 @@ use crate::types::Result;
 ///     Ok(())
 /// }
 /// ```
-pub async fn list_advertisements(client: &Client) -> Result<Vec<Advertisement>> {
+pub async fn list_advertisements(client: &Client) -> Result<AdvertisementMap> {
     trace!("Listing all advertisements");
 
-    let advertisements: Vec<Advertisement> = advertisement::list_advertisements(client)
+    let advertisements: Vec<(u32, Advertisement)> = advertisement::list_advertisements(client)
         .await?
         .into_iter()
-        .map(Advertisement::from)
+        .map(|advertisement| {
+            (
+                advertisement.container_id().parse().unwrap(),
+                Advertisement::from(advertisement),
+            )
+        })
         .collect();
 
-    Ok(advertisements)
+    Ok(group(advertisements.into_iter()))
 }
 
 /// List advertisements for a container from Rocket Advertisement.
@@ -63,17 +69,22 @@ pub async fn list_advertisements(client: &Client) -> Result<Vec<Advertisement>> 
 pub async fn list_advertisements_by_container(
     client: &Client,
     container_id: u32,
-) -> Result<Vec<Advertisement>> {
+) -> Result<AdvertisementMap> {
     trace!("Listing advertisements by container id {}", container_id);
 
-    let advertisements: Vec<Advertisement> =
+    let advertisements: Vec<(u32, Advertisement)> =
         advertisement::list_advertisements_by_container(client, container_id)
             .await?
             .into_iter()
-            .map(Advertisement::from)
+            .map(|advertisement| {
+                (
+                    advertisement.container_id().parse().unwrap(),
+                    Advertisement::from(advertisement),
+                )
+            })
             .collect();
 
-    Ok(advertisements)
+    Ok(group(advertisements.into_iter()))
 }
 
 /* ******************************************* Tests ******************************************** */
@@ -82,7 +93,7 @@ pub async fn list_advertisements_by_container(
 mod test {
     use reqwest::Client;
 
-    use crate::service::types::advertisement::Advertisement;
+    use crate::service::types::advertisement::AdvertisementMap;
     use crate::types::Result;
 
     use super::{list_advertisements, list_advertisements_by_container};
@@ -93,7 +104,7 @@ mod test {
         let client: Client = Client::new();
 
         // When
-        let result: Result<Vec<Advertisement>> = list_advertisements(&client).await;
+        let result: Result<AdvertisementMap> = list_advertisements(&client).await;
 
         // Then
         match result {
@@ -109,7 +120,7 @@ mod test {
         let container_id: u32 = 0;
 
         // When
-        let result: Result<Vec<Advertisement>> =
+        let result: Result<AdvertisementMap> =
             list_advertisements_by_container(&client, container_id).await;
 
         // Then

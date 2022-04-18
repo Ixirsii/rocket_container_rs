@@ -1,12 +1,13 @@
 //! Video domain type definition.
 
+use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 
 use serde::{Deserialize, Serialize};
 
 use crate::types::{array_to_string, option_to_string, AssetType, VideoType};
 
-/// Asset reference returned from container service.
+/// Asset reference returned from Rocket Container.
 ///
 /// Container service returns a variant of [`AssetReferenceDto`][1] with `id` field as a number and
 /// without `container_id` field. [`AssetReferenceDto`][1]s returned from
@@ -68,7 +69,7 @@ impl Display for AssetReference {
     }
 }
 
-/// Video asset returned from container service.
+/// Video asset returned from Rocket Container.
 ///
 /// Container service returns a variant of [`VideoDto`][1] with `id` field as a number and
 /// without `container_id` field. [`VideoDto`][1]s returned from
@@ -589,3 +590,5 @@ impl Display for VideoBuilder {
         )
     }
 }
+
+pub type VideoMap = HashMap<u32, Vec<Video>>;

@@ -1,10 +1,11 @@
 //! Advertisement domain type definition.
 
+use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 
 use serde::{Deserialize, Serialize};
 
-/// Advertisement asset returned from container service.
+/// Advertisement asset returned from Rocket Container.
 ///
 /// Container service returns a variant of [`AdvertisementDto`][1] with `id` field as a number and
 /// without `container_id` field. [`AdvertisementDto`][1]s returned from
@@ -72,3 +73,5 @@ impl Display for Advertisement {
         )
     }
 }
+
+pub type AdvertisementMap = HashMap<u32, Vec<Advertisement>>;

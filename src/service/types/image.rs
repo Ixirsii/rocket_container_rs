@@ -1,10 +1,11 @@
 //! Image domain type definition.
 
+use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 
 use serde::{Deserialize, Serialize};
 
-/// Image asset returned from container service.
+/// Image asset returned from Rocket Container.
 ///
 /// Container service returns a variant of [`ImageDto`][1] with `id` field as a number and
 /// without `container_id` field. [`ImageDto`][1]s returned from
@@ -72,3 +73,5 @@ impl Display for Image {
         )
     }
 }
+
+pub type ImageMap = HashMap<u32, Vec<Image>>;

@@ -34,6 +34,12 @@ pub struct ImageDto {
     url: String,
 }
 
+impl ImageDto {
+    pub fn container_id(&self) -> &str {
+        &self.container_id
+    }
+}
+
 impl From<ImageDto> for Image {
     /// Get an [`Image`][1] from an [`ImageDto`][2].
     ///
