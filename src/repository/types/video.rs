@@ -1,10 +1,13 @@
 //! Video data transfer object type definitions.
 
-use crate::controller::types::{AssetReference, Video, VideoBuilder};
-use crate::types::{AssetType, VideoType};
+use std::fmt::{Display, Formatter};
+
 use serde::{Deserialize, Serialize};
 
-/* ******************************************* Types ******************************************** */
+use crate::service::types::video::{AssetReference, Video, VideoBuilder};
+use crate::types::{array_to_string, AssetType, VideoType};
+
+/* ************************************* AssetReferenceDto ************************************** */
 
 /// A reference to an asset associated with a [Video].
 ///
@@ -58,6 +61,16 @@ impl AssetReferenceDto {
     }
 }
 
+impl Display for AssetReferenceDto {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "AssetReferenceDto {{ asset_id: {}, asset_type: {}, video_id: {} }}",
+            self.asset_id, self.asset_type, self.video_id
+        )
+    }
+}
+
 impl From<AssetReferenceDto> for AssetReference {
     /// Get an [AssetReference] from an [AssetReferenceDto].
     ///
@@ -65,7 +78,7 @@ impl From<AssetReferenceDto> for AssetReference {
     ///
     /// ```rust
     /// use reqwest::Client;
-    /// use rocket_stream::controller::types::AssetReference;
+    /// use rocket_stream::service::types::video::AssetReference;
     /// use rocket_stream::repository::video::list_asset_references;
     ///
     /// let client: Client = Client::new();
@@ -83,6 +96,8 @@ impl From<AssetReferenceDto> for AssetReference {
         )
     }
 }
+
+/* ***************************************** VideoDto ******************************************* */
 
 /// Video data returned from Rocket Video service.
 ///
@@ -169,6 +184,16 @@ impl VideoDto {
     }
 }
 
+impl Display for VideoDto {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "VideoDto {{ id: {}, title: {}, description: {} }}",
+            self.id, self.title, self.description
+        )
+    }
+}
+
 impl From<VideoDto> for VideoBuilder {
     /// Get a [Video] from a [VideoDto].
     ///
@@ -176,7 +201,7 @@ impl From<VideoDto> for VideoBuilder {
     ///
     /// ```rust
     /// use reqwest::Client;
-    /// use rocket_stream::controller::types::Video;
+    /// use rocket_stream::service::types::video::Video;
     /// use rocket_stream::repository::video::list_videos;
     ///
     /// let client: Client = Client::new();
@@ -195,6 +220,8 @@ impl From<VideoDto> for VideoBuilder {
             .r#type(video_dto.r#type)
     }
 }
+
+/* ************************************** VideoAssetsDto **************************************** */
 
 /// [Wrapper] for [Video]s.
 ///
@@ -216,6 +243,18 @@ pub struct VideoAssetsDto {
     pub video_assets: Vec<AssetReferenceDto>,
 }
 
+impl Display for VideoAssetsDto {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "VideoAssetsDto {{ video_assets: {} }}",
+            array_to_string(&self.video_assets)
+        )
+    }
+}
+
+/* ***************************************** VideosDto ****************************************** */
+
 /// [Wrapper] for [Video]s.
 ///
 /// # Examples
@@ -235,12 +274,23 @@ pub struct VideosDto {
     pub videos: Vec<VideoDto>,
 }
 
+impl Display for VideosDto {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "VideosDto {{ videos: {:?} }}",
+            array_to_string(&self.videos)
+        )
+    }
+}
+
 /* ******************************************* Tests ******************************************** */
 
 #[cfg(test)]
 mod test {
-    use super::{AssetReferenceDto, VideoDto, VideosDto};
     use crate::types::{AssetType, VideoType};
+
+    use super::{AssetReferenceDto, VideoDto, VideosDto};
 
     #[test]
     fn deserialize_asset_reference() {

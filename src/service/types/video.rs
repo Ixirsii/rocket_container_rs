@@ -1,70 +1,10 @@
-//! Controller layer type definitions.
+//! Video domain type definition.
 
-#![deny(rustdoc::broken_intra_doc_links)]
-#![deny(missing_docs)]
-#![deny(rustdoc::missing_crate_level_docs)]
+use std::fmt::{Display, Formatter};
 
-use crate::types::{AssetType, VideoType};
 use serde::{Deserialize, Serialize};
 
-/// Advertisement asset returned from container service.
-///
-/// Container service returns a variant of [`AdvertisementDto`][1] with `id` field as a number and
-/// without `container_id` field. [`AdvertisementDto`][1]s returned from
-/// [`advertisement repository`][2] get converted into this type before being returned from the
-/// controller.
-///
-/// # Examples
-///
-/// ```rust
-/// use rocket_stream::controller::types::Advertisement;
-///
-/// let advertisement = Advertisement::new(
-///     1,
-///     "Advertisement".to_string(),
-///     "https://advertisement.com/video".to_string(),
-/// );
-/// ```
-///
-/// ```rust
-/// use rocket_stream::controller::types::Advertisement;
-///
-/// let advertisement_dto: AdvertisementDto = ...;
-/// let advertisement = Advertisement::from(advertisement_dto);
-/// ```
-///
-/// [1]: [crate::repository::types::advertisement::AdvertisementDto]
-/// [2]: [crate::repository::advertisement]
-///
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Advertisement {
-    /// Unique advertisement identifier.
-    id: u32,
-    /// Name of advertisement.
-    name: String,
-    /// Advertisement playback url.
-    url: String,
-}
-
-impl Advertisement {
-    /// Construct a new Advertisement.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use rocket_stream::controller::types::Advertisement;
-    ///
-    /// let advertisement = Advertisement::new(
-    ///     1,
-    ///     "Advertisement".to_string(),
-    ///     "https://advertisement.com/video".to_string(),
-    /// );
-    /// ```
-    pub fn new(id: u32, name: String, url: String) -> Self {
-        Advertisement { id, name, url }
-    }
-}
+use crate::types::{array_to_string, option_to_string, AssetType, VideoType};
 
 /// Asset reference returned from container service.
 ///
@@ -76,13 +16,13 @@ impl Advertisement {
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::controller::types::AssetReference;
+/// use rocket_stream::service::types::video::AssetReference;
 ///
 /// let asset_reference = AssetReference::new(1, AssetType::Video);
 /// ```
 ///
 /// ```rust
-/// use rocket_stream::controller::types::AssetReference;
+/// use rocket_stream::service::types::video::AssetReference;
 ///
 /// let asset_reference_dto: AssetReferenceDto = ...;
 /// let asset_reference = AssetReference::from(advertisement_dto);
@@ -106,7 +46,7 @@ impl AssetReference {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::controller::types::AssetReference;
+    /// use rocket_stream::service::types::video::AssetReference;
     ///
     /// let asset_reference = AssetReference::new(1, AssetType::Video);
     /// ```
@@ -118,62 +58,13 @@ impl AssetReference {
     }
 }
 
-/// Image asset returned from container service.
-///
-/// Container service returns a variant of [`ImageDto`][1] with `id` field as a number and
-/// without `container_id` field. [`ImageDto`][1]s returned from
-/// [`image repository`][2] get converted into this type before being returned from the
-/// controller.
-///
-/// # Examples
-///
-/// ```rust
-/// use rocket_stream::controller::types::Image;
-///
-/// let image = Image::new(
-///     1,
-///     "Cool video thumbnail".to_string(),
-///     "https://video.com/thumbnail.png".to_string(),
-/// );
-/// ```
-///
-/// ```rust
-/// use rocket_stream::controller::types::Image;
-///
-/// let image_dto: ImageDto = ...;
-/// let image = Image::from(image_dto);
-/// ```
-///
-/// [1]: [crate::repository::types::image::ImageDto]
-/// [2]: [crate::repository::image]
-///
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Image {
-    /// Unique image identifier.
-    id: u32,
-    /// Name of image.
-    name: String,
-    /// Image URL.
-    url: String,
-}
-
-impl Image {
-    /// Construct a new Image.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use rocket_stream::controller::types::Image;
-    ///
-    /// let image = Image::new(
-    ///     1,
-    ///     "Cool video thumbnail".to_string(),
-    ///     "https://video.com/thumbnail.png".to_string(),
-    /// );
-    /// ```
-    pub fn new(id: u32, name: String, url: String) -> Self {
-        Image { id, name, url }
+impl Display for AssetReference {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "AssetReference {{ asset_id: {}, asset_type: {} }}",
+            self.asset_id, self.asset_type
+        )
     }
 }
 
@@ -188,7 +79,7 @@ impl Image {
 ///
 /// ```rust
 /// use rocket_stream::types::VideoType;
-/// use rocket_stream::controller::types::Video;
+/// use rocket_stream::service::types::video::Video;
 ///
 /// let video = Video::new(
 ///     Vec::new(),
@@ -203,7 +94,7 @@ impl Image {
 ///
 /// ```rust
 /// use rocket_stream::types::VideoType;
-/// use rocket_stream::controller::types::Video;
+/// use rocket_stream::service::types::video::Video;
 ///
 /// let assets: Vec<AssetReference> = ...;
 /// let video = Video::builder(1)
@@ -217,7 +108,7 @@ impl Image {
 /// ```
 ///
 /// ```rust
-/// use rocket_stream::controller::types::Video;
+/// use rocket_stream::service::types::video::Video;
 /// use rocket_stream::repository::types::video::VideoDto;
 ///
 /// let video_dto: VideoDto = ...;
@@ -256,7 +147,7 @@ impl Video {
     ///
     /// ```rust
     /// use rocket_stream::types::VideoType;
-    /// use rocket_stream::controller::types::Video;
+    /// use rocket_stream::service::types::video::Video;
     ///
     /// let video = Video::new(
     ///     Vec::new(),
@@ -296,7 +187,7 @@ impl Video {
     ///
     /// ```rust
     /// use rocket_stream::types::VideoType;
-    /// use rocket_stream::controller::types::Video;
+    /// use rocket_stream::service::types::video::Video;
     ///
     /// let assets: Vec<AssetReference> = ...;
     /// let video = Video::builder(1)
@@ -317,7 +208,7 @@ impl Video {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::controller::types::Video;
+    /// use rocket_stream::service::types::video::Video;
     ///
     /// let video_without_assets: Video = ...;
     /// let asset: AssetReference = ...;
@@ -336,12 +227,29 @@ impl Video {
     }
 }
 
+impl Display for Video {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Video {{ id: {}, title: {}, description: {}, expiration_date: {}, playback_url: {}, \
+            type: {}, assets: {} }}",
+            self.id,
+            self.title,
+            self.description,
+            self.expiration_date,
+            self.playback_url,
+            self.r#type,
+            self.assets.len()
+        )
+    }
+}
+
 /// Builder class for [Video].
 ///
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::controller::types::Video;
+/// use rocket_stream::service::types::video::Video;
 /// use rocket_stream::repository::types::video::VideoDto;
 ///
 /// let video_dto: VideoDto = ...;
@@ -353,7 +261,7 @@ impl Video {
 ///
 /// ```rust
 /// use rocket_stream::types::VideoType;
-/// use rocket_stream::controller::types::Video;
+/// use rocket_stream::service::types::video::Video;
 ///
 /// let assets: Vec<AssetReference> = ...;
 /// let video = Video::builder(1)
@@ -368,7 +276,7 @@ impl Video {
 ///
 /// ```rust
 /// use rocket_stream::types::VideoType;
-/// use rocket_stream::controller::types::Video;
+/// use rocket_stream::service::types::video::Video;
 ///
 /// let assets: Vec<AssetReference> = ...;
 /// let video = VideoBuilder::new(1)
@@ -382,7 +290,7 @@ impl Video {
 /// ```
 ///
 /// ```rust
-/// use rocket_stream::controller::types::Video;
+/// use rocket_stream::service::types::video::Video;
 ///
 /// let video_without_assets: Video = ...;
 /// let asset: AssetReference = ...;
@@ -428,7 +336,7 @@ impl VideoBuilder {
     ///
     /// ```rust
     /// use rocket_stream::types::VideoType;
-    /// use rocket_stream::controller::types::Video;
+    /// use rocket_stream::service::types::video::Video;
     ///
     /// let assets: Vec<AssetReference> = ...;
     /// let video = VideoBuilder::new(1)
@@ -454,11 +362,14 @@ impl VideoBuilder {
 
     /// Build a [Video].
     ///
+    /// Builds a [Video], transferring ownership of the builder's internal state to the returned
+    /// [Video].
+    ///
     /// # Examples
     ///
     /// ```rust
     /// use rocket_stream::types::VideoType;
-    /// use rocket_stream::controller::types::Video;
+    /// use rocket_stream::service::types::video::Video;
     ///
     /// let assets: Vec<AssetReference> = ...;
     /// let video = VideoBuilder::new(1)
@@ -482,6 +393,43 @@ impl VideoBuilder {
         }
     }
 
+    /// Build a [Video].
+    ///
+    /// Builds a [Video], cloning the builder's internal state.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use rocket_stream::types::VideoType;
+    /// use rocket_stream::service::types::video::Video;
+    ///
+    /// let assets: Vec<AssetReference> = ...;
+    /// let video_builder = VideoBuilder::new(1)
+    ///     .assets(assets)
+    ///     .description("A Rust tutorial!".to_string())
+    ///     .expiration_date("2023-04-18".to_string())
+    ///     .playback_url("https://video.com/video.mp4".to_string())
+    ///     .title("How to implement Rocket Stream in Rust".to_string())
+    ///     .r#type(VideoType::EPISODE);
+    ///
+    /// let video1: Video = video_builder.build_clone();
+    ///
+    /// video_builder.asset(asset);
+    ///
+    /// let video2: Video = video_builder.build_clone();
+    /// ```
+    pub fn build_clone(&self) -> Video {
+        Video {
+            assets: self.assets.clone(),
+            description: self.description.clone().unwrap(),
+            expiration_date: self.expiration_date.clone().unwrap(),
+            id: self.id,
+            playback_url: self.playback_url.clone().unwrap(),
+            title: self.title.clone().unwrap(),
+            r#type: self.r#type.clone().unwrap(),
+        }
+    }
+
     /// Push an asset into `VideoBuilder::assets`.
     ///
     /// Singular form of [VideoBuilder::assets].
@@ -489,7 +437,7 @@ impl VideoBuilder {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::controller::types::Video;
+    /// use rocket_stream::service::types::video::Video;
     /// use rocket_stream::repository::types::video::VideoDto;
     ///
     /// let video_dto: VideoDto = ...;
@@ -508,7 +456,7 @@ impl VideoBuilder {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::controller::types::Video;
+    /// use rocket_stream::service::types::video::Video;
     /// use rocket_stream::repository::types::video::VideoDto;
     ///
     /// let video_dto: VideoDto = ...;
@@ -527,7 +475,7 @@ impl VideoBuilder {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::controller::types::Video;
+    /// use rocket_stream::service::types::video::Video;
     /// use rocket_stream::repository::types::video::VideoDto;
     ///
     /// let video_dto: VideoDto = ...;
@@ -546,7 +494,7 @@ impl VideoBuilder {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::controller::types::Video;
+    /// use rocket_stream::service::types::video::Video;
     /// use rocket_stream::repository::types::video::VideoDto;
     ///
     /// let video_dto: VideoDto = ...;
@@ -565,7 +513,7 @@ impl VideoBuilder {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::controller::types::Video;
+    /// use rocket_stream::service::types::video::Video;
     /// use rocket_stream::repository::types::video::VideoDto;
     ///
     /// let video_dto: VideoDto = ...;
@@ -584,7 +532,7 @@ impl VideoBuilder {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::controller::types::Video;
+    /// use rocket_stream::service::types::video::Video;
     /// use rocket_stream::repository::types::video::VideoDto;
     ///
     /// let video_dto: VideoDto = ...;
@@ -603,7 +551,7 @@ impl VideoBuilder {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::controller::types::Video;
+    /// use rocket_stream::service::types::video::Video;
     /// use rocket_stream::repository::types::video::VideoDto;
     ///
     /// let video_dto: VideoDto = ...;
@@ -615,5 +563,29 @@ impl VideoBuilder {
     pub fn r#type(mut self, r#type: VideoType) -> Self {
         self.r#type = Some(r#type);
         self
+    }
+}
+
+impl Display for VideoBuilder {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "VideoBuilder {{
+                id: {},
+                title: {},
+                description: {},
+                expiration_date: {},
+                playback_url: {},
+                type: {},
+                assets: {}
+            }}",
+            self.id,
+            option_to_string(&self.title),
+            option_to_string(&self.description),
+            option_to_string(&self.expiration_date),
+            option_to_string(&self.playback_url),
+            option_to_string(&self.r#type),
+            array_to_string(&self.assets),
+        )
     }
 }

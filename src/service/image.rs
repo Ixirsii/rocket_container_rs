@@ -3,8 +3,8 @@
 use log::trace;
 use reqwest::Client;
 
-use crate::controller::types::Image;
 use crate::repository::image;
+use crate::service::types::image::Image;
 use crate::types::Result;
 
 /// List all images from Rocket Image.
@@ -77,7 +77,7 @@ pub async fn list_images_by_container(client: &Client, container_id: u32) -> Res
 mod test {
     use reqwest::Client;
 
-    use crate::controller::types::Image;
+    use crate::service::types::image::Image;
     use crate::types::Result;
 
     use super::{list_images, list_images_by_container};

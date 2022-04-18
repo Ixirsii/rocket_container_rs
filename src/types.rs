@@ -29,6 +29,15 @@ pub enum AssetType {
     Image,
 }
 
+impl Display for AssetType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AssetType::Ad => write!(f, "AD"),
+            AssetType::Image => write!(f, "IMAGE"),
+        }
+    }
+}
+
 /// Internal error type.
 ///
 /// # Examples
@@ -59,6 +68,34 @@ pub struct Error {
     pub message: String,
 }
 
+impl Error {
+    /// Construct a new Error.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use rocket_stream::types::{Error, ErrorKind};
+    ///
+    /// Error::new(ErrorKind::Permanent, "Unexpected error")
+    /// ```
+    pub fn new(kind: ErrorKind, message: &str) -> Self {
+        Error {
+            kind,
+            message: message.to_string(),
+        }
+    }
+}
+
+impl Display for Error {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Error {{ kind: {}, message: {} }}",
+            self.kind, self.message,
+        )
+    }
+}
+
 /// Type of [Error] (whether the error is retryable or not).
 ///
 /// # Examples
@@ -80,6 +117,15 @@ pub enum ErrorKind {
     Transient,
 }
 
+impl Display for ErrorKind {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ErrorKind::Permanent => write!(f, "Permanent"),
+            ErrorKind::Transient => write!(f, "Transient"),
+        }
+    }
+}
+
 /// Alias for [core::result::Result] where the error type is always [Error].
 pub type Result<T> = core::result::Result<T, Error>;
 
@@ -98,59 +144,6 @@ pub enum VideoType {
     Movie,
 }
 
-// #[derive(Debug)]
-// pub struct Container {
-//     ads: Vec<Advertisement>,
-//     id: u32,
-//     images: Vec<Image>,
-//     title: String,
-//     videos: Vec<Video>
-// }
-
-/* *************************************** Implementation *************************************** */
-
-impl Error {
-    /// Construct a new Error.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use rocket_stream::types::{Error, ErrorKind};
-    ///
-    /// Error::new(ErrorKind::Permanent, "Unexpected error")
-    /// ```
-    pub fn new(kind: ErrorKind, message: &str) -> Self {
-        Error {
-            kind,
-            message: message.to_string(),
-        }
-    }
-}
-
-impl Display for AssetType {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            AssetType::Ad => write!(f, "AD"),
-            AssetType::Image => write!(f, "IMAGE"),
-        }
-    }
-}
-
-impl Display for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, r#"(kind: {}, message: {})"#, self.kind, self.message,)
-    }
-}
-
-impl Display for ErrorKind {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ErrorKind::Permanent => write!(f, "Permanent"),
-            ErrorKind::Transient => write!(f, "Transient"),
-        }
-    }
-}
-
 impl Display for VideoType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -158,6 +151,54 @@ impl Display for VideoType {
             VideoType::Episode => write!(f, "EPISODE"),
             VideoType::Movie => write!(f, "MOVIE"),
         }
+    }
+}
+
+/* ************************************** Utility function ************************************** */
+
+/// Convert an [Option] to a [String].
+///
+///# Examples
+///
+///```rust
+/// use rocket_stream::types::option_to_string;
+///
+/// let option: Option<String> = Some("Hello".to_string());
+/// let option_str: String = option_to_string(option);
+///```
+pub fn option_to_string<T>(option: &Option<T>) -> String
+where
+    T: Display,
+{
+    if let Some(value) = option {
+        format!("Some({})", value)
+    } else {
+        "None".to_string()
+    }
+}
+
+/// Convert an array to a [String].
+///
+/// # Examples
+///
+/// ```rust
+/// use rocket_stream::types::array_to_string;
+///
+/// let array: [String; 2] = ["Hello".to_string(), "World".to_string()];
+/// let array_str: String = array_to_string(&array);
+/// ```
+pub fn array_to_string<T>(vec: &[T]) -> String
+where
+    T: Display,
+{
+    if vec.is_empty() {
+        "[]".to_string()
+    } else {
+        let vec_str: String = vec
+            .iter()
+            .fold(String::new(), |head, tail| format!("{}, {}", head, tail));
+
+        format!("[ {} ]", vec_str)
     }
 }
 

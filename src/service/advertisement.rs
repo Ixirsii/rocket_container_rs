@@ -3,8 +3,8 @@
 use log::trace;
 use reqwest::Client;
 
-use crate::controller::types::Advertisement;
 use crate::repository::advertisement;
+use crate::service::types::advertisement::Advertisement;
 use crate::types::Result;
 
 /// List all advertisements from Rocket Advertisement.
@@ -82,7 +82,7 @@ pub async fn list_advertisements_by_container(
 mod test {
     use reqwest::Client;
 
-    use crate::controller::types::Advertisement;
+    use crate::service::types::advertisement::Advertisement;
     use crate::types::Result;
 
     use super::{list_advertisements, list_advertisements_by_container};

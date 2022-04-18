@@ -1,8 +1,10 @@
 //! Advertisement data transfer object type definitions.
 
 use serde::{Deserialize, Serialize};
+use std::fmt::{Display, Formatter};
 
-use crate::controller::types::Advertisement;
+use crate::service::types::advertisement::Advertisement;
+use crate::types::array_to_string;
 
 /* ************************************** AdvertisementDto ************************************** */
 
@@ -37,7 +39,7 @@ impl From<AdvertisementDto> for Advertisement {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::controller::types::Advertisement;
+    /// use rocket_stream::controller::types::advertisement::Advertisement;
     /// use rocket_stream::repository::advertisement::list_advertisements;
     ///
     /// let advertisements: Vec<Advertisement> = list_advertisements(&client)
@@ -55,6 +57,16 @@ impl From<AdvertisementDto> for Advertisement {
             advertisement_dto.id.parse().unwrap(),
             advertisement_dto.name,
             advertisement_dto.url,
+        )
+    }
+}
+
+impl Display for AdvertisementDto {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "AdvertisementDto {{ container_id: {}, id: {}, name: {}, url: {} }}",
+            self.container_id, self.id, self.name, self.url
         )
     }
 }
@@ -78,6 +90,16 @@ impl From<AdvertisementDto> for Advertisement {
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct AdvertisementsDto {
     pub advertisements: Vec<AdvertisementDto>,
+}
+
+impl Display for AdvertisementsDto {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "AdvertisementsDto {{ advertisements: {} }}",
+            array_to_string(&self.advertisements)
+        )
+    }
 }
 
 /* ******************************************* Tests ******************************************** */

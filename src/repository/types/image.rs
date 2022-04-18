@@ -1,8 +1,11 @@
 //! Image data transfer object type definitions.
 
+use std::fmt::{Display, Formatter};
+
 use serde::{Deserialize, Serialize};
 
-use crate::controller::types::Image;
+use crate::service::types::image::Image;
+use crate::types::array_to_string;
 
 /* ****************************************** ImageDto ****************************************** */
 
@@ -37,7 +40,7 @@ impl From<ImageDto> for Image {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::controller::types::Image;
+    /// use rocket_stream::service::types::image::Image;
     ///
     /// let images: Vec<Image> = list_images(&client)
     ///     .await?
@@ -51,6 +54,16 @@ impl From<ImageDto> for Image {
     ///
     fn from(image_dto: ImageDto) -> Self {
         Image::new(image_dto.id.parse().unwrap(), image_dto.name, image_dto.url)
+    }
+}
+
+impl Display for ImageDto {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{{ container_id: {}, id: {}, name: {}, url: {} }}",
+            self.container_id, self.id, self.name, self.url
+        )
     }
 }
 
@@ -72,6 +85,12 @@ impl From<ImageDto> for Image {
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ImagesDto {
     pub images: Vec<ImageDto>,
+}
+
+impl Display for ImagesDto {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{{ images: {} }}", array_to_string(&self.images))
+    }
 }
 
 /* ******************************************* Tests ******************************************** */

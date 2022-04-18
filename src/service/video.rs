@@ -6,9 +6,9 @@ use futures::future;
 use log::trace;
 use reqwest::Client;
 
-use crate::controller::types::{AssetReference, Video, VideoBuilder};
 use crate::repository::types::video::VideoDto;
 use crate::repository::video;
+use crate::service::types::video::{AssetReference, Video, VideoBuilder};
 use crate::types::{AssetType, Result, VideoType};
 
 /// Get video by ID from Rocket Video.
@@ -285,7 +285,7 @@ async fn map_video(client: &Client, video_dto: VideoDto) -> Result<Video> {
 mod test {
     use reqwest::Client;
 
-    use crate::controller::types::{AssetReference, Video};
+    use crate::service::types::video::{AssetReference, Video};
     use crate::types::{AssetType, Result, VideoType};
 
     use super::{
