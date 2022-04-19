@@ -94,7 +94,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert!(!actual.is_empty()),
-            Err(err) => panic!("Failed to list all advertisements with error: {}", err),
+            Err(err) => panic!("Failed to list images with error: {}", err),
         }
     }
 
@@ -110,7 +110,7 @@ mod test {
         // Then
         match result {
             Ok(actual) => assert!(!actual.is_empty()),
-            Err(err) => panic!("Failed to list advertisements with error: {}", err),
+            Err(err) => panic!("Failed to list images with error: {}", err),
         }
     }
 }
