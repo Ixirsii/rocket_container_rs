@@ -79,6 +79,26 @@ impl Container {
             videos.to_vec(),
         )
     }
+
+    pub fn ads(&self) -> &Vec<Advertisement> {
+        &self.ads
+    }
+
+    pub fn id(&self) -> u32 {
+        self.id
+    }
+
+    pub fn images(&self) -> &Vec<Image> {
+        &self.images
+    }
+
+    pub fn title(&self) -> &String {
+        &self.title
+    }
+
+    pub fn videos(&self) -> &Vec<Video> {
+        &self.videos
+    }
 }
 
 impl Display for Container {
