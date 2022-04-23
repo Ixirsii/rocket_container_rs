@@ -1,7 +1,6 @@
 //! Video repository.
 
 use log::trace;
-use reqwest::Client;
 
 use crate::repository::request;
 use crate::repository::types::video::{AssetReferenceDto, VideoAssetsDto, VideoDto, VideosDto};
@@ -43,15 +42,10 @@ const VIDEO_TYPE: &str = "type";
 ///     Ok(())
 /// }
 /// ```
-pub async fn get_video(client: &Client, video_id: u32) -> Result<VideoDto> {
+pub async fn get_video(video_id: u32) -> Result<VideoDto> {
     trace!("Getting video {}", video_id);
 
-    request::<VideoDto, ()>(
-        client,
-        format!("{}/{}", VIDEO_ENDPOINT, video_id).as_str(),
-        None,
-    )
-    .await
+    request::<VideoDto, ()>(format!("{}/{}", VIDEO_ENDPOINT, video_id).as_str(), None).await
 }
 
 /// List all assets for a video from Rocket Video.
@@ -75,14 +69,10 @@ pub async fn get_video(client: &Client, video_id: u32) -> Result<VideoDto> {
 ///     Ok(())
 /// }
 /// ```
-pub async fn list_asset_references(
-    client: &Client,
-    video_id: u32,
-) -> Result<Vec<AssetReferenceDto>> {
+pub async fn list_asset_references(video_id: u32) -> Result<Vec<AssetReferenceDto>> {
     trace!("Listing asset references for video {}", video_id);
 
     let asset_references: Vec<AssetReferenceDto> = request::<VideoAssetsDto, ()>(
-        client,
         format!("{}/{}/{}", VIDEO_ENDPOINT, video_id, ASSET_REFERENCES).as_str(),
         None,
     )
@@ -114,7 +104,6 @@ pub async fn list_asset_references(
 /// }
 /// ```
 pub async fn list_asset_references_by_type(
-    client: &Client,
     video_id: u32,
     asset_type: AssetType,
 ) -> Result<Vec<AssetReferenceDto>> {
@@ -126,7 +115,6 @@ pub async fn list_asset_references_by_type(
 
     let asset_references: Vec<AssetReferenceDto> =
         request::<VideoAssetsDto, [(&str, AssetType); 1]>(
-            client,
             format!("{}/{}/{}", VIDEO_ENDPOINT, video_id, ASSET_REFERENCES).as_str(),
             Some([(ASSET_TYPE, asset_type)]),
         )
@@ -157,12 +145,10 @@ pub async fn list_asset_references_by_type(
 ///     Ok(())
 /// }
 /// ```
-pub async fn list_videos(client: &Client) -> Result<Vec<VideoDto>> {
+pub async fn list_videos() -> Result<Vec<VideoDto>> {
     trace!("Listing all videos");
 
-    let videos: Vec<VideoDto> = request::<VideosDto, ()>(client, VIDEO_ENDPOINT, None)
-        .await?
-        .videos;
+    let videos: Vec<VideoDto> = request::<VideosDto, ()>(VIDEO_ENDPOINT, None).await?.videos;
 
     Ok(videos)
 }
@@ -188,11 +174,10 @@ pub async fn list_videos(client: &Client) -> Result<Vec<VideoDto>> {
 ///     Ok(())
 /// }
 /// ```
-pub async fn list_videos_by_container(client: &Client, container_id: u32) -> Result<Vec<VideoDto>> {
+pub async fn list_videos_by_container(container_id: u32) -> Result<Vec<VideoDto>> {
     trace!("Listing videos by container {}", container_id);
 
     let videos: Vec<VideoDto> = request::<VideosDto, [(&str, u32); 1]>(
-        client,
         VIDEO_ENDPOINT,
         Some([(CONTAINER_ID, container_id)]),
     )
@@ -223,11 +208,10 @@ pub async fn list_videos_by_container(client: &Client, container_id: u32) -> Res
 ///     Ok(())
 /// }
 /// ```
-pub async fn list_videos_by_type(client: &Client, video_type: VideoType) -> Result<Vec<VideoDto>> {
+pub async fn list_videos_by_type(video_type: VideoType) -> Result<Vec<VideoDto>> {
     trace!("Listing videos by type {}", video_type);
 
     let videos: Vec<VideoDto> = request::<VideosDto, [(&str, VideoType); 1]>(
-        client,
         VIDEO_ENDPOINT,
         Some([(VIDEO_TYPE, video_type)]),
     )
@@ -259,7 +243,6 @@ pub async fn list_videos_by_type(client: &Client, video_type: VideoType) -> Resu
 /// }
 /// ```
 pub async fn list_videos_by_container_and_type(
-    client: &Client,
     container_id: u32,
     video_type: VideoType,
 ) -> Result<Vec<VideoDto>> {
@@ -270,7 +253,6 @@ pub async fn list_videos_by_container_and_type(
     );
 
     let videos: Vec<VideoDto> = request::<VideosDto, [(&str, String); 2]>(
-        client,
         VIDEO_ENDPOINT,
         Some([
             (CONTAINER_ID, container_id.to_string()),
@@ -287,8 +269,6 @@ pub async fn list_videos_by_container_and_type(
 
 #[cfg(test)]
 mod test {
-    use reqwest::Client;
-
     use crate::repository::types::video::{AssetReferenceDto, VideoDto};
     use crate::types::{AssetType, Result, VideoType};
 
@@ -301,7 +281,6 @@ mod test {
     #[tokio::test]
     async fn test_get_video() {
         // Given
-        let client: Client = Client::new();
         let video_id: u32 = 1301;
         let expected: VideoDto = VideoDto::new(
             "25".to_string(),
@@ -315,7 +294,7 @@ mod test {
         );
 
         // When
-        let result: Result<VideoDto> = get_video(&client, video_id).await;
+        let result: Result<VideoDto> = get_video(video_id).await;
 
         // Then
         match result {
@@ -327,7 +306,6 @@ mod test {
     #[tokio::test]
     async fn test_list_asset_references() {
         // Given
-        let client: Client = Client::new();
         let video_id: u32 = 1404;
         let expected: Vec<AssetReferenceDto> = vec![AssetReferenceDto::new(
             "120".to_string(),
@@ -336,7 +314,7 @@ mod test {
         )];
 
         // When
-        let result: Result<Vec<AssetReferenceDto>> = list_asset_references(&client, video_id).await;
+        let result: Result<Vec<AssetReferenceDto>> = list_asset_references(video_id).await;
 
         // Then
         match result {
@@ -349,7 +327,6 @@ mod test {
     async fn test_list_asset_references_by_type() {
         // Given
         let asset_type: AssetType = AssetType::Image;
-        let client: Client = Client::new();
         let video_id: u32 = 1404;
         let expected: Vec<AssetReferenceDto> = vec![AssetReferenceDto::new(
             "120".to_string(),
@@ -359,7 +336,7 @@ mod test {
 
         // When
         let result: Result<Vec<AssetReferenceDto>> =
-            list_asset_references_by_type(&client, video_id, asset_type).await;
+            list_asset_references_by_type(video_id, asset_type).await;
 
         // Then
         match result {
@@ -370,11 +347,8 @@ mod test {
 
     #[tokio::test]
     async fn test_list_videos() {
-        // Given
-        let client: Client = Client::new();
-
         // When
-        let result: Result<Vec<VideoDto>> = list_videos(&client).await;
+        let result: Result<Vec<VideoDto>> = list_videos().await;
 
         // Then
         match result {
@@ -386,11 +360,10 @@ mod test {
     #[tokio::test]
     async fn test_list_videos_by_container() {
         // Given
-        let client: Client = Client::new();
         let container_id: u32 = 0;
 
         // When
-        let result: Result<Vec<VideoDto>> = list_videos_by_container(&client, container_id).await;
+        let result: Result<Vec<VideoDto>> = list_videos_by_container(container_id).await;
 
         // Then
         match result {
@@ -402,11 +375,10 @@ mod test {
     #[tokio::test]
     async fn test_list_videos_by_type() {
         // Given
-        let client: Client = Client::new();
         let video_type: VideoType = VideoType::Movie;
 
         // When
-        let result: Result<Vec<VideoDto>> = list_videos_by_type(&client, video_type).await;
+        let result: Result<Vec<VideoDto>> = list_videos_by_type(video_type).await;
 
         // Then
         match result {
@@ -418,13 +390,12 @@ mod test {
     #[tokio::test]
     async fn test_list_videos_by_container_and_type() {
         // Given
-        let client: Client = Client::new();
         let container_id: u32 = 0;
         let video_type: VideoType = VideoType::Movie;
 
         // When
         let result: Result<Vec<VideoDto>> =
-            list_videos_by_container_and_type(&client, container_id, video_type).await;
+            list_videos_by_container_and_type(container_id, video_type).await;
 
         // Then
         match result {

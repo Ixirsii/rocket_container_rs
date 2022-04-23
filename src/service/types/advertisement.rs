@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::controller::types::advertisement::Advertisement;
+/// use rocket_stream::service::types::advertisement::Advertisement;
 ///
 /// let advertisement = Advertisement::new(
 ///     1,
@@ -25,10 +25,14 @@ use serde::{Deserialize, Serialize};
 /// ```
 ///
 /// ```rust
-/// use rocket_stream::controller::types::advertisement::Advertisement;
+/// use rocket_stream::repository::advertisement::list_advertisements_by_container;
+/// use rocket_stream::service::types::advertisement::Advertisement;
 ///
-/// let advertisement_dto: AdvertisementDto = ...;
-/// let advertisement = Advertisement::from(advertisement_dto);
+/// let advertisements: Vec<Advertisement> = list_advertisements_by_container(container_id)
+///     .await?
+///     .into_iter()
+///     .map(Advertisement::from)
+///     .collect();
 /// ```
 ///
 /// [1]: [crate::repository::types::advertisement::AdvertisementDto]

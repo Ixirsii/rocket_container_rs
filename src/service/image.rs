@@ -1,7 +1,6 @@
 //! Advertisement service.
 
 use log::trace;
-use reqwest::Client;
 
 use crate::repository::image;
 use crate::service::group;
@@ -28,10 +27,10 @@ use crate::types::Result;
 ///     Ok(())
 /// }
 /// ```
-pub async fn list_images(client: &Client) -> Result<ImageMap> {
+pub async fn list_images() -> Result<ImageMap> {
     trace!("Listing all images");
 
-    let images: Vec<(u32, Image)> = image::list_images(client)
+    let images: Vec<(u32, Image)> = image::list_images()
         .await?
         .into_iter()
         .map(|image| (image.container_id().parse().unwrap(), Image::from(image)))
@@ -50,9 +49,7 @@ pub async fn list_images(client: &Client) -> Result<ImageMap> {
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), ()> {
-///     let client = Client::new();
-///
-///     match list_images_by_container(&client) {
+///     match list_images_by_container() {
 ///         Ok(images) => println!("Got images: {}", images),
 ///         Err(_) => println!("Failed to get images"),
 ///     };
@@ -60,36 +57,31 @@ pub async fn list_images(client: &Client) -> Result<ImageMap> {
 ///     Ok(())
 /// }
 /// ```
-pub async fn list_images_by_container(client: &Client, container_id: u32) -> Result<ImageMap> {
+pub async fn list_images_by_container(container_id: u32) -> Result<Vec<Image>> {
     trace!("Listing images by container id {}", container_id);
 
-    let images: Vec<(u32, Image)> = image::list_images_by_container(client, container_id)
+    let images: Vec<Image> = image::list_images_by_container(container_id)
         .await?
         .into_iter()
-        .map(|image| (image.container_id().parse().unwrap(), Image::from(image)))
+        .map(Image::from)
         .collect();
 
-    Ok(group(images.into_iter()))
+    Ok(images)
 }
 
 /* ******************************************* Tests ******************************************** */
 
 #[cfg(test)]
 mod test {
-    use reqwest::Client;
-
-    use crate::service::types::image::ImageMap;
+    use crate::service::types::image::{Image, ImageMap};
     use crate::types::Result;
 
     use super::{list_images, list_images_by_container};
 
     #[tokio::test]
     async fn test_list_images() {
-        // Given
-        let client: Client = Client::new();
-
         // When
-        let result: Result<ImageMap> = list_images(&client).await;
+        let result: Result<ImageMap> = list_images().await;
 
         // Then
         match result {
@@ -101,11 +93,10 @@ mod test {
     #[tokio::test]
     async fn test_list_images_by_container() {
         // Given
-        let client: Client = Client::new();
         let container_id: u32 = 0;
 
         // When
-        let result: Result<ImageMap> = list_images_by_container(&client, container_id).await;
+        let result: Result<Vec<Image>> = list_images_by_container(container_id).await;
 
         // Then
         match result {

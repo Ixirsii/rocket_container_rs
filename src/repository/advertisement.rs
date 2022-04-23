@@ -1,7 +1,6 @@
 //! Advertisement repository.
 
 use log::trace;
-use reqwest::Client;
 
 use crate::types::Result;
 
@@ -35,11 +34,11 @@ const CONTAINER_ID: &str = "containerId";
 ///     Ok(())
 /// }
 /// ```
-pub async fn list_advertisements(client: &Client) -> Result<Vec<AdvertisementDto>> {
+pub async fn list_advertisements() -> Result<Vec<AdvertisementDto>> {
     trace!("Listing all advertisements");
 
     let advertisements: Vec<AdvertisementDto> =
-        request::<AdvertisementsDto, ()>(client, ADVERTISEMENT_ENDPOINT, None)
+        request::<AdvertisementsDto, ()>(ADVERTISEMENT_ENDPOINT, None)
             .await?
             .advertisements;
 
@@ -60,21 +59,17 @@ pub async fn list_advertisements(client: &Client) -> Result<Vec<AdvertisementDto
 ///     let container_id = 0;
 ///
 ///     match list_advertisements_by_container(&client, container_id) {
-///         Ok(advertisements) => println!("Got advertisements: {:$?}", advertisements),
+///         Ok(advertisements) => println!("Got advertisements: {:#?}", advertisements),
 ///         Err(_) => println!("Failed to get advertisements"),
 ///     };
 ///
 ///     Ok(())
 /// }
 /// ```
-pub async fn list_advertisements_by_container(
-    client: &Client,
-    container_id: u32,
-) -> Result<Vec<AdvertisementDto>> {
+pub async fn list_advertisements_by_container(container_id: u32) -> Result<Vec<AdvertisementDto>> {
     trace!("Listing advertisements for container {}", container_id);
 
     let advertisements: Vec<AdvertisementDto> = request::<AdvertisementsDto, [(&str, u32); 1]>(
-        client,
         ADVERTISEMENT_ENDPOINT,
         Some([(CONTAINER_ID, container_id)]),
     )
@@ -88,8 +83,6 @@ pub async fn list_advertisements_by_container(
 
 #[cfg(test)]
 mod test {
-    use reqwest::Client;
-
     use crate::repository::types::advertisement::AdvertisementDto;
     use crate::types::Result;
 
@@ -97,11 +90,8 @@ mod test {
 
     #[tokio::test]
     async fn test_list_advertisements() {
-        // Given
-        let client: Client = Client::new();
-
         // When
-        let result: Result<Vec<AdvertisementDto>> = list_advertisements(&client).await;
+        let result: Result<Vec<AdvertisementDto>> = list_advertisements().await;
 
         // Then
         match result {
@@ -113,12 +103,11 @@ mod test {
     #[tokio::test]
     async fn test_list_advertisements_by_container() {
         // Given
-        let client: Client = Client::new();
         let container_id: u32 = 0;
 
         // When
         let result: Result<Vec<AdvertisementDto>> =
-            list_advertisements_by_container(&client, container_id).await;
+            list_advertisements_by_container(container_id).await;
 
         // Then
         match result {

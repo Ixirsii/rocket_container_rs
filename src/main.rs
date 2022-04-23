@@ -1,25 +1,42 @@
 //! A solution for Bottle Rocket Studio's Rocket Stream coding challenge.
 
-#![deny(rustdoc::broken_intra_doc_links)]
-#![deny(missing_docs)]
-#![deny(rustdoc::missing_crate_level_docs)]
+#[macro_use]
+extern crate rocket;
 
-use log::info;
-use std::fmt::Error;
+use crate::routes::{get_advertisements, get_container, get_images, get_videos, list_containers};
 
-mod controller;
-mod repository;
-mod service;
-mod types;
+#[launch]
+pub fn rocket() -> _ {
+    rocket::build().mount(
+        "/",
+        routes![
+            get_advertisements,
+            get_container,
+            get_images,
+            get_videos,
+            list_containers
+        ],
+    )
+}
 
-#[tokio::main]
-async fn main() -> Result<(), Error> {
-    match log4rs::init_file("log4rs.yaml", Default::default()) {
-        Ok(_) => info!("Logger initialized"),
-        Err(e) => eprintln!("Logger initialization failed: {}", e),
-    };
+/* ******************************************* Tests ******************************************** */
 
-    info!("Hello world!");
+#[cfg(test)]
+mod test {
+    use rocket::http::Status;
+    use rocket::local::blocking::Client;
 
-    Ok(())
+    use super::rocket;
+
+    #[test]
+    fn list_containers() {
+        // Given
+        let client = Client::tracked(rocket()).expect("valid rocket instance");
+
+        // When
+        let mut response = client.get("/").dispatch();
+
+        // Then
+        assert_eq!(response.status(), Status::Ok);
+    }
 }

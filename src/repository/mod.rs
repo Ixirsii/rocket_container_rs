@@ -21,6 +21,9 @@ pub mod image;
 pub mod types;
 pub mod video;
 
+/// Reqwest client.
+static CLIENT: Client = Client::new();
+
 /// Maximum number of retries when a service call fails.
 const MAX_ATTEMPTS: u32 = 10;
 
@@ -41,11 +44,13 @@ const MAX_BACKOFF: u64 = 1_000;
 /// # Examples
 ///
 /// ```rust
-/// use reqwest::Client;
+/// use reqwest::{Client, RequestBuilder, Response};
+///
+/// use rocket_stream_rust::repository::get;
 ///
 /// let client = Client::new();
 /// let mut request_builder: RequestBuilder = client.get("https://example.com".to_string());
-//  let response: Response = get(request_builder).await?;
+/// let response: Response = get(request_builder).await?;
 /// ```
 async fn get(request_builder: RequestBuilder) -> Result<Response> {
     match request_builder.send().await {
@@ -72,6 +77,11 @@ async fn get(request_builder: RequestBuilder) -> Result<Response> {
 /// # Examples
 ///
 /// ```rust
+/// use std::thread;
+/// use std::time::Duration;
+///
+/// use rocket_stream_rust::repository::get_backoff;
+///
 /// let backoff: u64 = get_backoff(i);
 /// thread::sleep(Duration::from_millis(backoff));
 /// ```
@@ -93,6 +103,7 @@ fn get_backoff(attempt: u32) -> u64 {
 ///
 /// ```rust
 /// use reqwest::Client;
+/// use rocket_stream_rust::{service::types::Advertisement, types::Result};
 /// use serde::{Deserialize, Serialize};
 ///
 /// #[derive(Deserialize, Serialize)]
@@ -139,7 +150,7 @@ fn get_backoff(attempt: u32) -> u64 {
 ///    Ok(advertisements)
 /// }
 /// ```
-async fn request<T, Q>(client: &Client, endpoint: &str, query: Option<Q>) -> Result<T>
+async fn request<T, Q>(endpoint: &str, query: Option<Q>) -> Result<T>
 where
     T: for<'de> Deserialize<'de>,
     Q: Debug + Serialize,
@@ -147,7 +158,7 @@ where
     trace!("Getting {}?{:#?}", endpoint, query);
 
     let op = || async {
-        let mut request_builder: RequestBuilder = client.get(endpoint);
+        let mut request_builder: RequestBuilder = CLIENT.get(endpoint);
 
         if query.is_some() {
             request_builder = request_builder.query(query.borrow());
@@ -176,17 +187,21 @@ where
 /// # Examples
 ///
 /// ```rust
+/// use log::Level::Error;
+/// use reqwest::{Client, RequestBuilder, Response};
+/// use rocket_stream_rust::{repository::{get, retry}, types::{Error, ErrorKind}};
+///
 /// let op = || async {
-/// let mut request_builder: RequestBuilder = client.get(endpoint);
+///     let mut request_builder: RequestBuilder = client.get(endpoint);
 ///
-/// if query.is_some() {
-///     request_builder = request_builder.query(query.borrow());
-/// }
+///     if query.is_some() {
+///         request_builder = request_builder.query(query.borrow());
+///     }
 ///
-/// let response: Response = get(request_builder).await?;
+///     let response: Response = get(request_builder).await?;
 ///
-/// match response.json::<T>().await {
-///     Ok(result) => Ok(result),
+///     match response.json::<T>().await {
+///         Ok(result) => Ok(result),
 ///         Err(err) => Err(Error::new(ErrorKind::Permanent, &err.to_string())),
 ///     }
 /// };
