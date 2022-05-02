@@ -12,7 +12,7 @@ use crate::types::Result;
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::service::image::list_images;
+/// use rocket_container::service::image::list_images;
 /// use reqwest::Client;
 ///
 /// #[tokio::main]
@@ -44,7 +44,7 @@ pub async fn list_images() -> Result<ImageMap> {
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::service::image::list_images_by_container;
+/// use rocket_container::service::image::list_images_by_container;
 /// use reqwest::Client;
 ///
 /// #[tokio::main]

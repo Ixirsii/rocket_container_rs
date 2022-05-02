@@ -17,7 +17,7 @@ const IMAGE_ENDPOINT: &str = "http://images.rocket-stream.bottlerocketservices.c
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::repository::image::list_images;
+/// use rocket_container::repository::image::list_images;
 /// use reqwest::Client;
 ///
 /// #[tokio::main]
@@ -45,7 +45,7 @@ pub async fn list_images() -> Result<Vec<ImageDto>> {
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::repository::image::list_images_by_container;
+/// use rocket_container::repository::image::list_images_by_container;
 /// use reqwest::Client;
 ///
 /// #[tokio::main]

@@ -16,7 +16,7 @@ use crate::types::{AssetType, Result, VideoType};
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::service::video::get_video;
+/// use rocket_container::service::video::get_video;
 /// use reqwest::Client;
 ///
 /// #[tokio::main]
@@ -48,7 +48,7 @@ pub async fn get_video(video_id: u32) -> Result<Video> {
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::service::video::list_asset_references;
+/// use rocket_container::service::video::list_asset_references;
 /// use reqwest::Client;
 ///
 /// #[tokio::main]
@@ -81,7 +81,7 @@ pub async fn list_asset_references(video_id: u32) -> Result<Vec<AssetReference>>
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::service::video::list_asset_references_by_type;
+/// use rocket_container::service::video::list_asset_references_by_type;
 /// use reqwest::Client;
 ///
 /// #[tokio::main]
@@ -122,7 +122,7 @@ pub async fn list_asset_references_by_type(
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::service::video::list_videos;
+/// use rocket_container::service::video::list_videos;
 /// use reqwest::Client;
 ///
 /// #[tokio::main]
@@ -158,7 +158,7 @@ pub async fn list_videos() -> Result<VideoMap> {
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::service::video::list_videos_by_container;
+/// use rocket_container::service::video::list_videos_by_container;
 /// use reqwest::Client;
 ///
 /// #[tokio::main]
@@ -194,7 +194,7 @@ pub async fn list_videos_by_container(container_id: u32) -> Result<Vec<Video>> {
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::service::video::list_videos_by_type;
+/// use rocket_container::service::video::list_videos_by_type;
 /// use reqwest::Client;
 ///
 /// #[tokio::main]
@@ -230,7 +230,7 @@ pub async fn list_videos_by_type(video_type: VideoType) -> Result<VideoMap> {
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::service::video::list_videos_by_container_and_type;
+/// use rocket_container::service::video::list_videos_by_container_and_type;
 /// use reqwest::Client;
 ///
 /// #[tokio::main]

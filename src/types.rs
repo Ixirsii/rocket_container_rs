@@ -14,11 +14,13 @@ use std::fmt::{Display, Formatter};
 /// # Examples
 ///
 /// ```rust
-/// AssetReferenceDto::new(
+/// use rocket_container::{repository::types::video::AssetReferenceDto, types::AssetType};
+///
+/// let asset_reference: AssetReferenceDto = AssetReferenceDto::new(
 ///     "120".to_string(),
 ///     AssetType::Image,
 ///     "1404".to_string(),
-/// )
+/// );
 /// ```
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "UPPERCASE")]
@@ -43,47 +45,41 @@ impl Display for AssetType {
 /// # Examples
 ///
 /// ```rust
-/// use reqwest::{RequestBuilder, StatusCode};
+/// use reqwest::{RequestBuilder, Response, StatusCode};
+/// use rocket_container::types::{Error, ErrorKind};
 ///
-/// let request_builder: RequestBuilder = ...;
-///
-/// match request_builder.send().await {
-///     Ok(response) => {
-///         if response.status() == StatusCode::OK {
-///             Ok(response)
-///         } else if response.status() == StatusCode::NOT_FOUND {
-///             Err(Error::new(ErrorKind::Permanent, "Resource not found"))
-///         } else if response.status() == StatusCode::INTERNAL_SERVER_ERROR {
-///             Err(Error::new(ErrorKind::Transient, "Internal server error"))
-///         } else {
-///             Err(Error::new(ErrorKind::Permanent, "Unexpected error"))
+/// async fn send(request_builder: RequestBuilder) -> Result<Response, Error> {
+///     match request_builder.send().await {
+///         Ok(response) => {
+///             if response.status() == StatusCode::OK {
+///                 Ok(response)
+///             } else if response.status() == StatusCode::NOT_FOUND {
+///                 Err(Error {
+///                     kind: ErrorKind::Permanent,
+///                     message: "Resource not found".to_string()
+///                 })
+///             } else if response.status() == StatusCode::INTERNAL_SERVER_ERROR {
+///                 Err(Error {
+///                     kind: ErrorKind::Transient,
+///                     message: "Internal server error".to_string()
+///                 })
+///             } else {
+///                 Err(Error {
+///                     kind: ErrorKind::Permanent,
+///                     message: "Unexpected error".to_string()
+///                 })
+///             }
 ///         }
+///         Err(err) => Err(Error { kind: ErrorKind::Permanent, message: err.to_string() }),
 ///     }
-///     Err(err) => return Err(Error::new(ErrorKind::Permanent, &err.to_string())),
 /// }
 /// ```
 #[derive(Debug, Eq, PartialEq)]
 pub struct Error {
+    /// If the error is permanent or transient.
     pub kind: ErrorKind,
+    /// Error message.
     pub message: String,
-}
-
-impl Error {
-    /// Construct a new Error.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use rocket_stream::types::{Error, ErrorKind};
-    ///
-    /// Error::new(ErrorKind::Permanent, "Unexpected error")
-    /// ```
-    pub fn new(kind: ErrorKind, message: &str) -> Self {
-        Error {
-            kind,
-            message: message.to_string(),
-        }
-    }
 }
 
 impl Display for Error {
@@ -101,15 +97,21 @@ impl Display for Error {
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::types::{Error, ErrorKind};
+/// use rocket_container::types::{Error, ErrorKind};
 ///
-/// Error::new(ErrorKind::Permanent, "Unexpected error")
+/// let error: Error = Error {
+///     kind: ErrorKind::Permanent,
+///     message: "Unexpected error".to_string()
+/// };
 /// ```
 ///
 /// ```rust
-/// use rocket_stream::types::{Error, ErrorKind};
+/// use rocket_container::types::{Error, ErrorKind};
 ///
-/// Error::new(ErrorKind::Transient, "Internal server error")
+/// let error: Error = Error {
+///     kind: ErrorKind::Transient,
+///     message: "Internal server error".to_string()
+/// };
 /// ```
 #[derive(Debug, Eq, PartialEq)]
 pub enum ErrorKind {
@@ -161,10 +163,10 @@ impl Display for VideoType {
 ///# Examples
 ///
 ///```rust
-/// use rocket_stream::types::option_to_string;
+/// use rocket_container::types::option_to_string;
 ///
 /// let option: Option<String> = Some("Hello".to_string());
-/// let option_str: String = option_to_string(option);
+/// let option_str: String = option_to_string(&option);
 ///```
 pub fn option_to_string<T>(option: &Option<T>) -> String
 where
@@ -182,7 +184,7 @@ where
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::types::array_to_string;
+/// use rocket_container::types::array_to_string;
 ///
 /// let array: [String; 2] = ["Hello".to_string(), "World".to_string()];
 /// let array_str: String = array_to_string(&array);

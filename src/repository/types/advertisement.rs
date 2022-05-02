@@ -14,8 +14,8 @@ use crate::types::array_to_string;
 ///
 /// ```rust
 /// use reqwest::Client;
-/// use rocket_stream::repository::advertisement::list_advertisements;
-/// use rocket_stream::repository::types::advertisement::AdvertisementDto;
+/// use rocket_container::repository::advertisement::list_advertisements;
+/// use rocket_container::repository::types::advertisement::AdvertisementDto;
 ///
 /// let client: Client = Client::new();
 //  let advertisements: Vec<AdvertisementDto> = list_advertisements(&client).await.unwrap();
@@ -45,8 +45,8 @@ impl From<AdvertisementDto> for Advertisement {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::controller::types::advertisement::Advertisement;
-    /// use rocket_stream::repository::advertisement::list_advertisements;
+    /// use rocket_container::controller::types::advertisement::Advertisement;
+    /// use rocket_container::repository::advertisement::list_advertisements;
     ///
     /// let advertisements: Vec<Advertisement> = list_advertisements(&client)
     ///     .await?
@@ -85,8 +85,8 @@ impl Display for AdvertisementDto {
 ///
 /// ```rust
 /// use reqwest::Client;
-/// use rocket_stream::repository::request;
-/// use rocket_stream::repository::types::advertisement::{AdvertisementDto, AdvertisementsDto};
+/// use rocket_container::repository::request;
+/// use rocket_container::repository::types::advertisement::{AdvertisementDto, AdvertisementsDto};
 ///
 /// let advertisements: Vec<AdvertisementDto> =
 ///     request::<AdvertisementsDto, ()>(client, ADVERTISEMENT_ENDPOINT, None)

@@ -15,8 +15,8 @@ use crate::types::array_to_string;
 ///
 /// ```rust
 /// use reqwest::Client;
-/// use rocket_stream::repository::image::list_images;
-/// use rocket_stream::repository::types::image::ImageDto;
+/// use rocket_container::repository::image::list_images;
+/// use rocket_container::repository::types::image::ImageDto;
 ///
 /// let client: Client = Client::new();
 //  let images: Vec<ImageDto> = list_images(&client).await.unwrap();
@@ -46,7 +46,7 @@ impl From<ImageDto> for Image {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::service::types::image::Image;
+    /// use rocket_container::service::types::image::Image;
     ///
     /// let images: Vec<Image> = list_images(&client)
     ///     .await?
@@ -81,7 +81,7 @@ impl Display for ImageDto {
 ///
 /// ```rust
 /// use reqwest::Client;
-/// use rocket_stream::repository::types::image::{ImageDto, ImagesDto};
+/// use rocket_container::repository::types::image::{ImageDto, ImagesDto};
 ///
 /// let advertisements: Vec<AdvertisementDto> =
 ///     request::<AdvertisementsDto, ()>(client, ADVERTISEMENT_ENDPOINT, None)

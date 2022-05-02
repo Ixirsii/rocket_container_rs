@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::service::types::advertisement::Advertisement;
+/// use rocket_container::service::types::advertisement::Advertisement;
 ///
 /// let advertisement = Advertisement::new(
 ///     1,
@@ -25,8 +25,8 @@ use serde::{Deserialize, Serialize};
 /// ```
 ///
 /// ```rust
-/// use rocket_stream::repository::advertisement::list_advertisements_by_container;
-/// use rocket_stream::service::types::advertisement::Advertisement;
+/// use rocket_container::repository::advertisement::list_advertisements_by_container;
+/// use rocket_container::service::types::advertisement::Advertisement;
 ///
 /// let advertisements: Vec<Advertisement> = list_advertisements_by_container(container_id)
 ///     .await?
@@ -55,7 +55,7 @@ impl Advertisement {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::controller::types::advertisement::Advertisement;
+    /// use rocket_container::controller::types::advertisement::Advertisement;
     ///
     /// let advertisement = Advertisement::new(
     ///     1,

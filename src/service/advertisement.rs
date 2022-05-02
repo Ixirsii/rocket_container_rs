@@ -12,7 +12,7 @@ use crate::types::Result;
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::service::advertisement::list_advertisements;
+/// use rocket_container::service::advertisement::list_advertisements;
 /// use reqwest::Client;
 ///
 /// #[tokio::main]
@@ -49,7 +49,7 @@ pub async fn list_advertisements() -> Result<AdvertisementMap> {
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::service::advertisement::list_advertisements_by_container;
+/// use rocket_container::service::advertisement::list_advertisements_by_container;
 /// use reqwest::Client;
 ///
 /// #[tokio::main]

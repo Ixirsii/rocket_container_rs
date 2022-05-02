@@ -19,7 +19,7 @@ const CONTAINER_ID: &str = "containerId";
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::repository::advertisement::list_advertisements;
+/// use rocket_container::repository::advertisement::list_advertisements;
 /// use reqwest::Client;
 ///
 /// #[tokio::main]
@@ -50,7 +50,7 @@ pub async fn list_advertisements() -> Result<Vec<AdvertisementDto>> {
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::repository::advertisement::list_advertisements_by_container;
+/// use rocket_container::repository::advertisement::list_advertisements_by_container;
 /// use reqwest::Client;
 ///
 /// #[tokio::main]

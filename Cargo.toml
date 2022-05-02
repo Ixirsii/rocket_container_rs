@@ -1,10 +1,10 @@
 [package]
-name = "rocket_stream_rust"
+name = "rocket_container"
 version = "0.1.0"
 authors = ["Ryan Porterfield <ixirsii@protonmail.com>"]
 description = "A solution for Bottle Rocket Studio's Rocket Stream coding test"
 license = "BSD 3-Clause"
-repository = "https://bitbucket.org/Ixirsii/rocket_stream_rust/"
+repository = "https://bitbucket.org/Ixirsii/rocket_container_rust"
 readme = "README.md"
 keywords = ["bottle", "rocket", "studios", "stream"]
 edition = "2021"

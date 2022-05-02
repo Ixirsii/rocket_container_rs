@@ -17,13 +17,13 @@ use crate::types::{array_to_string, option_to_string, AssetType, VideoType};
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::service::types::video::AssetReference;
+/// use rocket_container::service::types::video::AssetReference;
 ///
 /// let asset_reference = AssetReference::new(1, AssetType::Video);
 /// ```
 ///
 /// ```rust
-/// use rocket_stream::service::types::video::AssetReference;
+/// use rocket_container::service::types::video::AssetReference;
 ///
 /// let asset_reference_dto: AssetReferenceDto = ...;
 /// let asset_reference = AssetReference::from(advertisement_dto);
@@ -47,7 +47,7 @@ impl AssetReference {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::service::types::video::AssetReference;
+    /// use rocket_container::service::types::video::AssetReference;
     ///
     /// let asset_reference = AssetReference::new(1, AssetType::Video);
     /// ```
@@ -79,8 +79,8 @@ impl Display for AssetReference {
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::types::VideoType;
-/// use rocket_stream::service::types::video::Video;
+/// use rocket_container::types::VideoType;
+/// use rocket_container::service::types::video::Video;
 ///
 /// let video = Video::new(
 ///     Vec::new(),
@@ -94,8 +94,8 @@ impl Display for AssetReference {
 /// ```
 ///
 /// ```rust
-/// use rocket_stream::types::VideoType;
-/// use rocket_stream::service::types::video::Video;
+/// use rocket_container::types::VideoType;
+/// use rocket_container::service::types::video::Video;
 ///
 /// let assets: Vec<AssetReference> = ...;
 /// let video = Video::builder(1)
@@ -109,8 +109,8 @@ impl Display for AssetReference {
 /// ```
 ///
 /// ```rust
-/// use rocket_stream::service::types::video::Video;
-/// use rocket_stream::repository::types::video::VideoDto;
+/// use rocket_container::service::types::video::Video;
+/// use rocket_container::repository::types::video::VideoDto;
 ///
 /// let video_dto: VideoDto = ...;
 /// let assets: Vec<AssetReference> = ...;
@@ -147,8 +147,8 @@ impl Video {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::types::VideoType;
-    /// use rocket_stream::service::types::video::Video;
+    /// use rocket_container::types::VideoType;
+    /// use rocket_container::service::types::video::Video;
     ///
     /// let video = Video::new(
     ///     Vec::new(),
@@ -187,8 +187,8 @@ impl Video {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::types::VideoType;
-    /// use rocket_stream::service::types::video::Video;
+    /// use rocket_container::types::VideoType;
+    /// use rocket_container::service::types::video::Video;
     ///
     /// let assets: Vec<AssetReference> = ...;
     /// let video = Video::builder(1)
@@ -209,7 +209,7 @@ impl Video {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::service::types::video::Video;
+    /// use rocket_container::service::types::video::Video;
     ///
     /// let video_without_assets: Video = ...;
     /// let asset: AssetReference = ...;
@@ -250,8 +250,8 @@ impl Display for Video {
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::service::types::video::Video;
-/// use rocket_stream::repository::types::video::VideoDto;
+/// use rocket_container::service::types::video::Video;
+/// use rocket_container::repository::types::video::VideoDto;
 ///
 /// let video_dto: VideoDto = ...;
 /// let assets: Vec<AssetReference> = ...;
@@ -261,8 +261,8 @@ impl Display for Video {
 /// ```
 ///
 /// ```rust
-/// use rocket_stream::types::VideoType;
-/// use rocket_stream::service::types::video::Video;
+/// use rocket_container::types::VideoType;
+/// use rocket_container::service::types::video::Video;
 ///
 /// let assets: Vec<AssetReference> = ...;
 /// let video = Video::builder(1)
@@ -276,8 +276,8 @@ impl Display for Video {
 /// ```
 ///
 /// ```rust
-/// use rocket_stream::types::VideoType;
-/// use rocket_stream::service::types::video::Video;
+/// use rocket_container::types::VideoType;
+/// use rocket_container::service::types::video::Video;
 ///
 /// let assets: Vec<AssetReference> = ...;
 /// let video = VideoBuilder::new(1)
@@ -291,7 +291,7 @@ impl Display for Video {
 /// ```
 ///
 /// ```rust
-/// use rocket_stream::service::types::video::Video;
+/// use rocket_container::service::types::video::Video;
 ///
 /// let video_without_assets: Video = ...;
 /// let asset: AssetReference = ...;
@@ -336,8 +336,8 @@ impl VideoBuilder {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::types::VideoType;
-    /// use rocket_stream::service::types::video::Video;
+    /// use rocket_container::types::VideoType;
+    /// use rocket_container::service::types::video::Video;
     ///
     /// let assets: Vec<AssetReference> = ...;
     /// let video = VideoBuilder::new(1)
@@ -369,8 +369,8 @@ impl VideoBuilder {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::types::VideoType;
-    /// use rocket_stream::service::types::video::Video;
+    /// use rocket_container::types::VideoType;
+    /// use rocket_container::service::types::video::Video;
     ///
     /// let assets: Vec<AssetReference> = ...;
     /// let video = VideoBuilder::new(1)
@@ -401,8 +401,8 @@ impl VideoBuilder {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::types::VideoType;
-    /// use rocket_stream::service::types::video::Video;
+    /// use rocket_container::types::VideoType;
+    /// use rocket_container::service::types::video::Video;
     ///
     /// let assets: Vec<AssetReference> = ...;
     /// let video_builder = VideoBuilder::new(1)
@@ -438,8 +438,8 @@ impl VideoBuilder {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::service::types::video::Video;
-    /// use rocket_stream::repository::types::video::VideoDto;
+    /// use rocket_container::service::types::video::Video;
+    /// use rocket_container::repository::types::video::VideoDto;
     ///
     /// let video_dto: VideoDto = ...;
     /// let asset: AssetReference = ...;
@@ -457,8 +457,8 @@ impl VideoBuilder {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::service::types::video::Video;
-    /// use rocket_stream::repository::types::video::VideoDto;
+    /// use rocket_container::service::types::video::Video;
+    /// use rocket_container::repository::types::video::VideoDto;
     ///
     /// let video_dto: VideoDto = ...;
     /// let assets: Vec<AssetReference> = ...;
@@ -476,8 +476,8 @@ impl VideoBuilder {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::service::types::video::Video;
-    /// use rocket_stream::repository::types::video::VideoDto;
+    /// use rocket_container::service::types::video::Video;
+    /// use rocket_container::repository::types::video::VideoDto;
     ///
     /// let video_dto: VideoDto = ...;
     /// let description: String = ...;
@@ -495,8 +495,8 @@ impl VideoBuilder {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::service::types::video::Video;
-    /// use rocket_stream::repository::types::video::VideoDto;
+    /// use rocket_container::service::types::video::Video;
+    /// use rocket_container::repository::types::video::VideoDto;
     ///
     /// let video_dto: VideoDto = ...;
     /// let expiration_date: String = ...;
@@ -514,8 +514,8 @@ impl VideoBuilder {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::service::types::video::Video;
-    /// use rocket_stream::repository::types::video::VideoDto;
+    /// use rocket_container::service::types::video::Video;
+    /// use rocket_container::repository::types::video::VideoDto;
     ///
     /// let video_dto: VideoDto = ...;
     /// let playback_url: String = ...;
@@ -533,8 +533,8 @@ impl VideoBuilder {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::service::types::video::Video;
-    /// use rocket_stream::repository::types::video::VideoDto;
+    /// use rocket_container::service::types::video::Video;
+    /// use rocket_container::repository::types::video::VideoDto;
     ///
     /// let video_dto: VideoDto = ...;
     /// let title: String = ...;
@@ -552,8 +552,8 @@ impl VideoBuilder {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::service::types::video::Video;
-    /// use rocket_stream::repository::types::video::VideoDto;
+    /// use rocket_container::service::types::video::Video;
+    /// use rocket_container::repository::types::video::VideoDto;
     ///
     /// let video_dto: VideoDto = ...;
     /// let r#type: VideoType = ...;

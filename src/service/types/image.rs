@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 /// # Examples
 ///
 /// ```rust
-/// use rocket_stream::service::types::image::Image;
+/// use rocket_container::service::types::image::Image;
 ///
 /// let image = Image::new(
 ///     1,
@@ -25,7 +25,7 @@ use serde::{Deserialize, Serialize};
 /// ```
 ///
 /// ```rust
-/// use rocket_stream::controller::types::image::Image;
+/// use rocket_container::controller::types::image::Image;
 ///
 /// let image_dto: ImageDto = ...;
 /// let image = Image::from(image_dto);
@@ -51,7 +51,7 @@ impl Image {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::controller::types::image::Image;
+    /// use rocket_container::controller::types::image::Image;
     ///
     /// let image = Image::new(
     ///     1,

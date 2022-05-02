@@ -18,8 +18,8 @@ use crate::types::{array_to_string, AssetType, VideoType};
 ///
 /// ```rust
 /// use reqwest::Client;
-/// use rocket_stream::repository::video::list_asset_references;
-/// use rocket_stream::repository::types::video::AssetReferenceDto;
+/// use rocket_container::repository::video::list_asset_references;
+/// use rocket_container::repository::types::video::AssetReferenceDto;
 ///
 /// let client: Client = Client::new();
 /// let video_id: u32 = 1404;
@@ -44,7 +44,7 @@ impl AssetReferenceDto {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::repository::types::video::AssetReferenceDto;
+    /// use rocket_container::repository::types::video::AssetReferenceDto;
     ///
     /// AssetReferenceDto::new(
     ///     "120".to_string(),
@@ -78,8 +78,8 @@ impl From<AssetReferenceDto> for AssetReference {
     ///
     /// ```rust
     /// use reqwest::Client;
-    /// use rocket_stream::service::types::video::AssetReference;
-    /// use rocket_stream::repository::video::list_asset_references;
+    /// use rocket_container::service::types::video::AssetReference;
+    /// use rocket_container::repository::video::list_asset_references;
     ///
     /// let client: Client = Client::new();
     /// let video_id: u32 = 1404;
@@ -105,8 +105,8 @@ impl From<AssetReferenceDto> for AssetReference {
 ///
 /// ```rust
 /// use reqwest::Client;
-/// use rocket_stream::repository::video::list_videos;
-/// use rocket_stream::repository::types::video::VideoDto;
+/// use rocket_container::repository::video::list_videos;
+/// use rocket_container::repository::types::video::VideoDto;
 ///
 /// let client: Client = Client::new();
 /// let advertisements: Vec<AdvertisementDto> = list_videos(&client).await.unwrap();
@@ -136,7 +136,7 @@ impl VideoDto {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::repository::types::video::VideoDto;
+    /// use rocket_container::repository::types::video::VideoDto;
     ///
     /// let expected: VideoDto = VideoDto::new(
     ///     "25".to_string(),
@@ -178,7 +178,7 @@ impl VideoDto {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_stream::repository::types::video::VideoDto;
+    /// use rocket_container::repository::types::video::VideoDto;
     ///
     /// let video: VideoDto = ...;
     /// let video_id: &str = video.id();
@@ -205,8 +205,8 @@ impl From<VideoDto> for VideoBuilder {
     ///
     /// ```rust
     /// use reqwest::Client;
-    /// use rocket_stream::service::types::video::Video;
-    /// use rocket_stream::repository::video::list_videos;
+    /// use rocket_container::service::types::video::Video;
+    /// use rocket_container::repository::video::list_videos;
     ///
     /// let client: Client = Client::new();
     /// let videos: Vec<Video> = list_videos(&client)
@@ -233,8 +233,8 @@ impl From<VideoDto> for VideoBuilder {
 ///
 /// ```rust
 /// use reqwest::Client;
-/// use rocket_stream::repository::request;
-/// use rocket_stream::repository::types::advertisement::{AssetReferenceDto, VideoAssetsDto};
+/// use rocket_container::repository::request;
+/// use rocket_container::repository::types::advertisement::{AssetReferenceDto, VideoAssetsDto};
 ///
 /// let advertisements: Vec<AssetReferenceDto> =
 ///     request::<VideoAssetsDto, ()>(client, VIDEO_ENDPOINT, None)
@@ -265,8 +265,8 @@ impl Display for VideoAssetsDto {
 ///
 /// ```rust
 /// use reqwest::Client;
-/// use rocket_stream::repository::request;
-/// use rocket_stream::repository::types::advertisement::{VideoDto, VideosDto};
+/// use rocket_container::repository::request;
+/// use rocket_container::repository::types::advertisement::{VideoDto, VideosDto};
 ///
 /// let advertisements: Vec<VideoDto> =
 ///     request::<VideosDto, ()>(client, VIDEO_ENDPOINT, None)
