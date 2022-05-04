@@ -6,302 +6,235 @@ use futures::future;
 use log::trace;
 
 use crate::repository::types::video::VideoDto;
-use crate::repository::video;
+use crate::repository::video::VideoRepository;
 use crate::service::group;
 use crate::service::types::video::{AssetReference, Video, VideoBuilder, VideoMap};
 use crate::types::{AssetType, Result, VideoType};
 
-/// Get video by ID from Rocket Video.
+/// Image service.
+///
+/// [`VideoService`] is the service layer wrapper for [`VideoRepository`]. It transforms
+/// DTO types into domain types.
 ///
 /// # Examples
 ///
 /// ```rust
-/// use rocket_container::service::video::get_video;
-/// use reqwest::Client;
-///
-/// #[tokio::main]
-/// async fn main() -> Result<(), ()> {
-///     let client = Client::new();
-///     let video_id: u32 = 1;
-///
-///     match get_video(&client, video_id) {
-///         Ok(video) => println!("Got video: {}", video),
-///         Err(_) => println!("Failed to get video"),
-///     };
-///
-///     Ok(())
-/// }
 /// ```
-pub async fn get_video(video_id: u32) -> Result<Video> {
-    trace!("Getting video {}", video_id);
-
-    let assets: Vec<AssetReference> = list_asset_references(video_id).await?;
-    let video: Video = VideoBuilder::from(video::get_video(video_id).await?)
-        .assets(assets)
-        .build();
-
-    Ok(video)
+#[derive(Default)]
+pub struct VideoService {
+    /// Repository layer that the service calls.
+    video_repository: VideoRepository,
 }
 
-/// List all assets for a video from Rocket Video.
-///
-/// # Examples
-///
-/// ```rust
-/// use rocket_container::service::video::list_asset_references;
-/// use reqwest::Client;
-///
-/// #[tokio::main]
-/// async fn main() -> Result<(), ()> {
-///     let client = Client::new();
-///     let video_id: u32 = 1;
-///
-///     match list_asset_references(&client, video_id) {
-///         Ok(assets) => println!("Got assets: {}", assets),
-///         Err(_) => println!("Failed to get assets"),
-///     };
-///
-///     Ok(())
-/// }
-/// ```
-pub async fn list_asset_references(video_id: u32) -> Result<Vec<AssetReference>> {
-    trace!("Listing asset references for video {}", video_id);
+impl<'a> VideoService {
+    //// Create a new [`VideoService`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// ```
+    pub fn new(video_repository: VideoRepository) -> Self {
+        Self { video_repository }
+    }
 
-    let asset_references: Vec<AssetReference> = video::list_asset_references(video_id)
-        .await?
-        .into_iter()
-        .map(AssetReference::from)
-        .collect();
+    /// Get video by ID from Rocket Video.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// ```
+    pub async fn get_video(&self, video_id: u32) -> Result<Video> {
+        trace!("VideoService::get_video {}", video_id);
 
-    Ok(asset_references)
-}
+        let assets: Vec<AssetReference> = self.list_asset_references(video_id).await?;
+        let video: Video = VideoBuilder::from(self.video_repository.get_video(video_id).await?)
+            .assets(assets)
+            .build();
 
-/// List all assets for a video, by type, from Rocket Video.
-///
-/// # Examples
-///
-/// ```rust
-/// use rocket_container::service::video::list_asset_references_by_type;
-/// use reqwest::Client;
-///
-/// #[tokio::main]
-/// async fn main() -> Result<(), ()> {
-///     let client = Client::new();
-///     let video_id: u32 = 1;
-///
-///     match list_asset_references_by_type(&client, video_id) {
-///         Ok(assets) => println!("Got assets: {}", assets),
-///         Err(_) => println!("Failed to get assets"),
-///     };
-///
-///     Ok(())
-/// }
-/// ```
-pub async fn list_asset_references_by_type(
-    video_id: u32,
-    asset_type: AssetType,
-) -> Result<Vec<AssetReference>> {
-    trace!(
-        "Listing asset references for video {} by type {}",
-        video_id,
-        asset_type
-    );
+        Ok(video)
+    }
 
-    let asset_references: Vec<AssetReference> =
-        video::list_asset_references_by_type(video_id, asset_type)
+    /// List all assets for a video from Rocket Video.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// ```
+    pub async fn list_asset_references(&self, video_id: u32) -> Result<Vec<AssetReference>> {
+        trace!("VideoService::list_asset_references {}", video_id);
+
+        let asset_references: Vec<AssetReference> = self
+            .video_repository
+            .list_asset_references(video_id)
             .await?
             .into_iter()
             .map(AssetReference::from)
             .collect();
 
-    Ok(asset_references)
-}
+        Ok(asset_references)
+    }
 
-/// List all videos from Rocket Video.
-///
-/// # Examples
-///
-/// ```rust
-/// use rocket_container::service::video::list_videos;
-/// use reqwest::Client;
-///
-/// #[tokio::main]
-/// async fn main() -> Result<(), ()> {
-///     let client = Client::new();
-///     let video_id: u32 = 1;
-///
-///     match list_videos(&client, video_id) {
-///         Ok(videos) => println!("Got videos: {}", videos),
-///         Err(_) => println!("Failed to get video"),
-///     };
-///
-///     Ok(())
-/// }
-/// ```
-pub async fn list_videos() -> Result<VideoMap> {
-    trace!("Listing all videos");
+    /// List all assets for a video, by type, from Rocket Video.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// ```
+    pub async fn list_asset_references_by_type(
+        &self,
+        video_id: u32,
+        asset_type: AssetType,
+    ) -> Result<Vec<AssetReference>> {
+        trace!(
+            "VideoService::list_asset_references_by_type ({}, {})",
+            video_id,
+            asset_type
+        );
 
-    let images: Vec<(u32, Video)> = future::try_join_all(
-        video::list_videos()
+        let asset_references: Vec<AssetReference> = self
+            .video_repository
+            .list_asset_references_by_type(video_id, asset_type)
             .await?
             .into_iter()
-            .map(map_videodto_to_tuple),
-    )
-    .await
-    .unwrap();
+            .map(AssetReference::from)
+            .collect();
 
-    Ok(group(images.into_iter()))
-}
+        Ok(asset_references)
+    }
 
-/// List all videos for a container from Rocket Video.
-///
-/// # Examples
-///
-/// ```rust
-/// use rocket_container::service::video::list_videos_by_container;
-/// use reqwest::Client;
-///
-/// #[tokio::main]
-/// async fn main() -> Result<(), ()> {
-///     let client = Client::new();
-///     let video_id: u32 = 1;
-///
-///     match list_videos_by_container(&client, video_id) {
-///         Ok(videos) => println!("Got videos: {}", videos),
-///         Err(_) => println!("Failed to get video"),
-///     };
-///
-///     Ok(())
-/// }
-/// ```
-pub async fn list_videos_by_container(container_id: u32) -> Result<Vec<Video>> {
-    trace!("Listing videos by container id {}", container_id);
+    /// List all videos from Rocket Video.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// ```
+    pub async fn list_videos(&self) -> Result<VideoMap> {
+        trace!("VideoService::list_videos");
 
-    let images: Vec<Video> = future::try_join_all(
-        video::list_videos_by_container(container_id)
-            .await?
-            .into_iter()
-            .map(map_videodto_to_video),
-    )
-    .await
-    .unwrap();
+        let images: Vec<(u32, Video)> = future::try_join_all(
+            self.video_repository
+                .list_videos()
+                .await?
+                .into_iter()
+                .map(|video_dto| self.map_video_dto_to_tuple(video_dto)),
+        )
+        .await
+        .unwrap();
 
-    Ok(images)
-}
+        Ok(group(images.into_iter()))
+    }
 
-/// List all videos by type from Rocket Video.
-///
-/// # Examples
-///
-/// ```rust
-/// use rocket_container::service::video::list_videos_by_type;
-/// use reqwest::Client;
-///
-/// #[tokio::main]
-/// async fn main() -> Result<(), ()> {
-///     let client = Client::new();
-///     let video_id: u32 = 1;
-///
-///     match list_videos_by_type(&client, video_id) {
-///         Ok(videos) => println!("Got videos: {}", videos),
-///         Err(_) => println!("Failed to get video"),
-///     };
-///
-///     Ok(())
-/// }
-/// ```
-pub async fn list_videos_by_type(video_type: VideoType) -> Result<VideoMap> {
-    trace!("Listing videos by type {}", video_type);
+    /// List all videos for a container from Rocket Video.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// ```
+    pub async fn list_videos_by_container(&self, container_id: u32) -> Result<Vec<Video>> {
+        trace!("VideoService::list_videos_by_container {}", container_id);
 
-    let images: Vec<(u32, Video)> = future::try_join_all(
-        video::list_videos_by_type(video_type)
-            .await?
-            .into_iter()
-            .map(|video_dto| map_videodto_to_tuple(video_dto)),
-    )
-    .await
-    .unwrap();
+        let images: Vec<Video> = future::try_join_all(
+            self.video_repository
+                .list_videos_by_container(container_id)
+                .await?
+                .into_iter()
+                .map(|video_dto| self.map_video_dto_to_video(video_dto)),
+        )
+        .await
+        .unwrap();
 
-    Ok(group(images.into_iter()))
-}
+        Ok(images)
+    }
 
-/// List all videos for a container, by type, from Rocket Video.
-///
-/// # Examples
-///
-/// ```rust
-/// use rocket_container::service::video::list_videos_by_container_and_type;
-/// use reqwest::Client;
-///
-/// #[tokio::main]
-/// async fn main() -> Result<(), ()> {
-///     let client = Client::new();
-///     let video_id: u32 = 1;
-///
-///     match list_videos_by_container_and_type(&client, video_id) {
-///         Ok(videos) => println!("Got videos: {}", videos),
-///         Err(_) => println!("Failed to get advertisements"),
-///     };
-///
-///     Ok(())
-/// }
-/// ```
-pub async fn list_videos_by_container_and_type(
-    container_id: u32,
-    video_type: VideoType,
-) -> Result<VideoMap> {
-    trace!(
-        "Listing videos by container {} and type {}",
-        container_id,
-        video_type
-    );
+    /// List all videos by type from Rocket Video.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// ```
+    pub async fn list_videos_by_type(&self, video_type: VideoType) -> Result<VideoMap> {
+        trace!("VideoService::list_videos_by_type {}", video_type);
 
-    let images: Vec<(u32, Video)> = future::try_join_all(
-        video::list_videos_by_container_and_type(container_id, video_type)
-            .await?
-            .into_iter()
-            .map(|video_dto| map_videodto_to_tuple(video_dto)),
-    )
-    .await
-    .unwrap();
+        let images: Vec<(u32, Video)> = future::try_join_all(
+            self.video_repository
+                .list_videos_by_type(video_type)
+                .await?
+                .into_iter()
+                .map(|video_dto| self.map_video_dto_to_tuple(video_dto)),
+        )
+        .await
+        .unwrap();
 
-    Ok(group(images.into_iter()))
-}
+        Ok(group(images.into_iter()))
+    }
 
-/* ********************************** Private utility function ********************************** */
+    /// List all videos for a container, by type, from Rocket Video.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// ```
+    pub async fn list_videos_by_container_and_type(
+        &self,
+        container_id: u32,
+        video_type: VideoType,
+    ) -> Result<VideoMap> {
+        trace!(
+            "VideoService::list_videos_by_container_and_type ({}, {})",
+            container_id,
+            video_type
+        );
 
-async fn map_videodto_to_video(video_dto: VideoDto) -> Result<Video> {
-    let assets: Vec<AssetReference> =
-        list_asset_references(video_dto.id().parse().unwrap()).await?;
+        let images: Vec<(u32, Video)> = future::try_join_all(
+            self.video_repository
+                .list_videos_by_container_and_type(container_id, video_type)
+                .await?
+                .into_iter()
+                .map(|video_dto| self.map_video_dto_to_tuple(video_dto)),
+        )
+        .await
+        .unwrap();
 
-    Ok(VideoBuilder::from(video_dto).assets(assets).build())
-}
+        Ok(group(images.into_iter()))
+    }
 
-async fn map_videodto_to_tuple(video_dto: VideoDto) -> Result<(u32, Video)> {
-    let assets: Vec<AssetReference> =
-        list_asset_references(video_dto.id().parse().unwrap()).await?;
+    /* ****************************** Private utility function ****************************** */
 
-    Ok((
-        video_dto.container_id().parse().unwrap(),
-        VideoBuilder::from(video_dto).assets(assets).build(),
-    ))
+    async fn map_video_dto_to_video(&self, video_dto: VideoDto) -> Result<Video> {
+        let assets: Vec<AssetReference> = self
+            .list_asset_references(video_dto.id().parse().unwrap())
+            .await?;
+
+        Ok(VideoBuilder::from(video_dto).assets(assets).build())
+    }
+
+    async fn map_video_dto_to_tuple(&self, video_dto: VideoDto) -> Result<(u32, Video)> {
+        let assets: Vec<AssetReference> = self
+            .list_asset_references(video_dto.id().parse().unwrap())
+            .await?;
+
+        Ok((
+            video_dto.container_id().parse().unwrap(),
+            VideoBuilder::from(video_dto).assets(assets).build(),
+        ))
+    }
 }
 
 /* ******************************************* Tests ******************************************** */
 
 #[cfg(test)]
 mod test {
-    use crate::service::types::video::{AssetReference, Video, VideoMap};
-    use crate::types::{AssetType, Result, VideoType};
-
-    use super::{
-        get_video, list_asset_references, list_asset_references_by_type, list_videos,
-        list_videos_by_container, list_videos_by_container_and_type, list_videos_by_type,
+    use crate::{
+        service::types::video::{AssetReference, Video, VideoMap},
+        types::{AssetType, Result, VideoType},
     };
+
+    use super::VideoService;
 
     #[tokio::test]
     async fn test_get_video() {
         // Given
+        let service = VideoService::default();
         let video_id: u32 = 1301;
         let expected: Video = Video::new(
             Vec::new(),
@@ -315,7 +248,7 @@ mod test {
         );
 
         // When
-        let result: Result<Video> = get_video(video_id).await;
+        let result: Result<Video> = service.get_video(video_id).await;
 
         // Then
         match result {
@@ -327,11 +260,12 @@ mod test {
     #[tokio::test]
     async fn test_list_asset_references() {
         // Given
+        let service = VideoService::default();
         let video_id: u32 = 1404;
         let expected: Vec<AssetReference> = vec![AssetReference::new(120, AssetType::Image)];
 
         // When
-        let result: Result<Vec<AssetReference>> = list_asset_references(video_id).await;
+        let result: Result<Vec<AssetReference>> = service.list_asset_references(video_id).await;
 
         // Then
         match result {
@@ -343,13 +277,15 @@ mod test {
     #[tokio::test]
     async fn test_list_asset_references_by_type() {
         // Given
+        let service = VideoService::default();
         let asset_type: AssetType = AssetType::Image;
         let video_id: u32 = 1404;
         let expected: Vec<AssetReference> = vec![AssetReference::new(120, AssetType::Image)];
 
         // When
-        let result: Result<Vec<AssetReference>> =
-            list_asset_references_by_type(video_id, asset_type).await;
+        let result: Result<Vec<AssetReference>> = service
+            .list_asset_references_by_type(video_id, asset_type)
+            .await;
 
         // Then
         match result {
@@ -360,8 +296,11 @@ mod test {
 
     #[tokio::test]
     async fn test_list_videos() {
+        // Given
+        let service = VideoService::default();
+
         // When
-        let result: Result<VideoMap> = list_videos().await;
+        let result: Result<VideoMap> = service.list_videos().await;
 
         // Then
         match result {
@@ -373,10 +312,11 @@ mod test {
     #[tokio::test]
     async fn test_list_videos_by_container() {
         // Given
+        let service = VideoService::default();
         let container_id: u32 = 0;
 
         // When
-        let result: Result<Vec<Video>> = list_videos_by_container(container_id).await;
+        let result: Result<Vec<Video>> = service.list_videos_by_container(container_id).await;
 
         // Then
         match result {
@@ -388,10 +328,11 @@ mod test {
     #[tokio::test]
     async fn test_list_videos_by_type() {
         // Given
+        let service = VideoService::default();
         let video_type: VideoType = VideoType::Movie;
 
         // When
-        let result: Result<VideoMap> = list_videos_by_type(video_type).await;
+        let result: Result<VideoMap> = service.list_videos_by_type(video_type).await;
 
         // Then
         match result {
@@ -403,12 +344,14 @@ mod test {
     #[tokio::test]
     async fn test_list_videos_by_container_and_type() {
         // Given
+        let service = VideoService::default();
         let container_id: u32 = 0;
         let video_type: VideoType = VideoType::Movie;
 
         // When
-        let result: Result<VideoMap> =
-            list_videos_by_container_and_type(container_id, video_type).await;
+        let result: Result<VideoMap> = service
+            .list_videos_by_container_and_type(container_id, video_type)
+            .await;
 
         // Then
         match result {

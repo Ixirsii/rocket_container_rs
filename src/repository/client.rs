@@ -23,17 +23,16 @@ const MAX_ATTEMPTS: u32 = 10;
 const MAX_BACKOFF: u64 = 1_000;
 
 /// Wrapper for reqwest client.
+#[derive(Default)]
 pub struct Client {
     /// Client.
     client: reqwest::Client,
 }
 
 impl Client {
-    /// Create new client.
+    /// Create new [`Client`].
     pub fn new() -> Self {
-        Client {
-            client: reqwest::Client::new(),
-        }
+        Self::default()
     }
 
     /// Make a GET request with exponential backoff and retries on request failures.
@@ -169,5 +168,37 @@ impl Client {
                 message: err.to_string(),
             }),
         }
+    }
+}
+
+/* ******************************************* Tests ******************************************** */
+
+#[cfg(test)]
+mod test {
+    use serde::Deserialize;
+
+    use crate::types::Result;
+
+    use super::Client;
+
+    #[derive(Deserialize)]
+    struct CatFact {
+        fact: String,
+        length: usize,
+    }
+
+    #[tokio::test]
+    async fn test_get() {
+        // Given
+        let client = Client::new();
+        let endpoint: &str = "https://catfact.ninja/fact";
+
+        // When
+        let result: Result<CatFact> = client
+            .get::<CatFact, [(&str, usize); 1]>(endpoint, Some([("max_length", 140)]))
+            .await;
+
+        // Then
+        assert!(result.is_ok(), "Result should be Ok");
     }
 }

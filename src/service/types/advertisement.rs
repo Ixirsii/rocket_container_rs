@@ -78,4 +78,5 @@ impl Display for Advertisement {
     }
 }
 
+/// Type alias for a [`HashMap`] of [`u32`] to [`Vec`]`<`[`Advertisement`]`>`.
 pub type AdvertisementMap = HashMap<u32, Vec<Advertisement>>;

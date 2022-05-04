@@ -34,6 +34,7 @@ pub struct AdvertisementDto {
 }
 
 impl AdvertisementDto {
+    /// Get container ID.
     pub fn container_id(&self) -> &str {
         &self.container_id
     }
@@ -95,6 +96,7 @@ impl Display for AdvertisementDto {
 /// ```
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct AdvertisementsDto {
+    /// List of advertisements.
     pub advertisements: Vec<AdvertisementDto>,
 }
 

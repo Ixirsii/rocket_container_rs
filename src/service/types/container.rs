@@ -52,6 +52,13 @@ impl Container {
         }
     }
 
+    /// Create a container from a list of advertisements, images, and videos.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// todo!("Example");
+    /// ```
     pub fn from(
         container_id: u32,
         advertisements: &[Advertisement],
@@ -80,22 +87,27 @@ impl Container {
         )
     }
 
+    /// Get advertisements.
     pub fn ads(&self) -> &Vec<Advertisement> {
         &self.ads
     }
 
+    /// Get container ID.
     pub fn id(&self) -> u32 {
         self.id
     }
 
+    /// Get images.
     pub fn images(&self) -> &Vec<Image> {
         &self.images
     }
 
+    /// Get title.
     pub fn title(&self) -> &String {
         &self.title
     }
 
+    /// Get videos.
     pub fn videos(&self) -> &Vec<Video> {
         &self.videos
     }

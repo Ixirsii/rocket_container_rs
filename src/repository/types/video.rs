@@ -169,6 +169,7 @@ impl VideoDto {
         }
     }
 
+    /// Get container ID.
     pub fn container_id(&self) -> &str {
         &self.container_id
     }
@@ -244,6 +245,7 @@ impl From<VideoDto> for VideoBuilder {
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct VideoAssetsDto {
+    /// List of video asset references.
     pub video_assets: Vec<AssetReferenceDto>,
 }
 
@@ -275,6 +277,7 @@ impl Display for VideoAssetsDto {
 /// ```
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct VideosDto {
+    /// List of videos.
     pub videos: Vec<VideoDto>,
 }
 

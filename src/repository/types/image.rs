@@ -35,6 +35,7 @@ pub struct ImageDto {
 }
 
 impl ImageDto {
+    /// Get container ID.
     pub fn container_id(&self) -> &str {
         &self.container_id
     }
@@ -90,6 +91,7 @@ impl Display for ImageDto {
 /// ```
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ImagesDto {
+    /// List of images.
     pub images: Vec<ImageDto>,
 }
 

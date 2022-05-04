@@ -115,7 +115,9 @@ impl Display for Error {
 /// ```
 #[derive(Debug, Eq, PartialEq)]
 pub enum ErrorKind {
+    /// A permanent, non-retryable error.
     Permanent,
+    /// A transient, retryable error.
     Transient,
 }
 

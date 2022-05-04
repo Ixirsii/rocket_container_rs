@@ -382,7 +382,7 @@ impl VideoBuilder {
     ///     .r#type(VideoType::EPISODE)
     ///     .build();
     /// ```
-    pub fn build(mut self) -> Video {
+    pub fn build(self) -> Video {
         Video {
             assets: self.assets,
             description: self.description.unwrap(),
@@ -591,4 +591,5 @@ impl Display for VideoBuilder {
     }
 }
 
+/// Type alias for a [`HashMap`] of [`u32`] to [`Vec`]`<`[`Video`]`>`.  
 pub type VideoMap = HashMap<u32, Vec<Video>>;

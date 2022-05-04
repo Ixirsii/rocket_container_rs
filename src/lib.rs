@@ -1,3 +1,5 @@
+//! Rocket Container library.
+
 #![deny(rustdoc::broken_intra_doc_links)]
 #![deny(missing_docs)]
 #![deny(rustdoc::missing_crate_level_docs)]

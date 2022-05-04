@@ -74,4 +74,5 @@ impl Display for Image {
     }
 }
 
+/// Type alias for a [`HashMap`] of [`u32`] to [`Vec`]`<`[`Image`]`>`.
 pub type ImageMap = HashMap<u32, Vec<Image>>;

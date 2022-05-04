@@ -1,8 +1,9 @@
 //! Image repository.
 
 use log::trace;
+use std::sync::Arc;
 
-use crate::repository::request;
+use crate::repository::client::Client;
 use crate::repository::types::image::{ImageDto, ImagesDto};
 use crate::types::Result;
 
@@ -12,65 +13,64 @@ const CONTAINER_ID: &str = "containerId";
 /// Endpoint for Rocket Image service.
 const IMAGE_ENDPOINT: &str = "http://images.rocket-stream.bottlerocketservices.com/images";
 
-/// List all images from Rocket Image.
+/// Image repository.
+///
+/// [`ImageRepository`] is the repository layer which fetches images from Rocket Image service.
 ///
 /// # Examples
 ///
 /// ```rust
-/// use rocket_container::repository::image::list_images;
-/// use reqwest::Client;
-///
-/// #[tokio::main]
-/// async fn main() -> Result<(), ()> {
-///     let client = Client::new();
-///
-///     match list_images(&client) {
-///         Ok(images) => println!("Got images: {}", images),
-///         Err(_) => println!("Failed to get images"),
-///     };
-///
-///     Ok(())
-/// }
 /// ```
-pub async fn list_images() -> Result<Vec<ImageDto>> {
-    trace!("Listing all images");
-
-    let images: Vec<ImageDto> = request::<ImagesDto, ()>(IMAGE_ENDPOINT, None).await?.images;
-
-    Ok(images)
+#[derive(Default)]
+pub struct ImageRepository {
+    /// Client for making requests.
+    client: Arc<Client>,
 }
 
-/// List images for a container from Rocket Image.
-///
-/// # Examples
-///
-/// ```rust
-/// use rocket_container::repository::image::list_images_by_container;
-/// use reqwest::Client;
-///
-/// #[tokio::main]
-/// async fn main() -> Result<(), ()> {
-///     let client = Client::new();
-///
-///     match list_images_by_container(&client) {
-///         Ok(images) => println!("Got images: {}", images),
-///         Err(_) => println!("Failed to get images"),
-///     };
-///
-///     Ok(())
-/// }
-/// ```
-pub async fn list_images_by_container(container_id: u32) -> Result<Vec<ImageDto>> {
-    trace!("Listing images for container {}", container_id);
+impl ImageRepository {
+    /// Create new [`ImageRepository`].
+    pub fn new(client: Arc<Client>) -> Self {
+        ImageRepository { client }
+    }
 
-    let images: Vec<ImageDto> = request::<ImagesDto, [(&str, u32); 1]>(
-        IMAGE_ENDPOINT,
-        Some([(CONTAINER_ID, container_id)]),
-    )
-    .await?
-    .images;
+    /// List all images from Rocket Image.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// ```
+    pub async fn list_images(&self) -> Result<Vec<ImageDto>> {
+        trace!("Listing all images");
 
-    Ok(images)
+        let images: Vec<ImageDto> = self
+            .client
+            .get::<ImagesDto, ()>(IMAGE_ENDPOINT, None)
+            .await?
+            .images;
+
+        Ok(images)
+    }
+
+    /// List images for a container from Rocket Image.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// ```
+    pub async fn list_images_by_container(&self, container_id: u32) -> Result<Vec<ImageDto>> {
+        trace!("Listing images for container {}", container_id);
+
+        let images: Vec<ImageDto> = self
+            .client
+            .get::<ImagesDto, [(&str, u32); 1]>(
+                IMAGE_ENDPOINT,
+                Some([(CONTAINER_ID, container_id)]),
+            )
+            .await?
+            .images;
+
+        Ok(images)
+    }
 }
 
 #[cfg(test)]
@@ -78,12 +78,15 @@ mod test {
     use crate::repository::types::image::ImageDto;
     use crate::types::Result;
 
-    use super::{list_images, list_images_by_container};
+    use super::ImageRepository;
 
     #[tokio::test]
     async fn test_list_images() {
+        // Given
+        let repository = ImageRepository::default();
+
         // When
-        let result: Result<Vec<ImageDto>> = list_images().await;
+        let result: Result<Vec<ImageDto>> = repository.list_images().await;
 
         // Then
         match result {
@@ -95,10 +98,11 @@ mod test {
     #[tokio::test]
     async fn test_list_images_by_container() {
         // Given
+        let repository = ImageRepository::default();
         let container_id: u32 = 0;
 
         // When
-        let result: Result<Vec<ImageDto>> = list_images_by_container(container_id).await;
+        let result: Result<Vec<ImageDto>> = repository.list_images_by_container(container_id).await;
 
         // Then
         match result {
