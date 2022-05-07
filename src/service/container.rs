@@ -1,15 +1,133 @@
 //! Container service.
 
-use log::trace;
+use std::fmt::{Display, Formatter};
 
-use crate::service::advertisement::AdvertisementService;
-use crate::service::image::ImageService;
-use crate::service::types::advertisement::{Advertisement, AdvertisementMap};
-use crate::service::types::container::Container;
-use crate::service::types::image::{Image, ImageMap};
-use crate::service::types::video::{Video, VideoMap};
-use crate::service::video::VideoService;
-use crate::types::Result;
+use log::trace;
+use serde::{Deserialize, Serialize};
+
+use crate::{
+    service::{
+        advertisement::{Advertisement, AdvertisementMap, AdvertisementService},
+        image::{Image, ImageMap, ImageService},
+        video::{Video, VideoMap, VideoService},
+    },
+    types::Result,
+};
+
+/* ***************************************** Container ****************************************** */
+
+/// Container asset returned from Rocket Container.
+///
+/// A Container is an aggregation of advertisements, images, and videos. Rocket Container gets
+/// this data from its dependencies, Rocket Advertisement, Rocket Image, and Rocket Video, and
+/// aggregates them into containers for Rocket Stream.
+///
+/// # Examples
+///
+/// ```rust
+/// todo!("Example");
+/// ```
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct Container {
+    ads: Vec<Advertisement>,
+    id: u32,
+    images: Vec<Image>,
+    title: String,
+    videos: Vec<Video>,
+}
+
+impl Container {
+    /// Construct a new Container.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// todo!("Example");
+    /// ```
+    pub fn new(
+        ads: Vec<Advertisement>,
+        id: u32,
+        images: Vec<Image>,
+        title: String,
+        videos: Vec<Video>,
+    ) -> Self {
+        Container {
+            ads,
+            id,
+            images,
+            title,
+            videos,
+        }
+    }
+
+    /// Create a container from a list of advertisements, images, and videos.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// todo!("Example");
+    /// ```
+    pub fn from(
+        container_id: u32,
+        advertisements: &[Advertisement],
+        images: &[Image],
+        videos: &[Video],
+    ) -> Self {
+        let title_ads: String = match advertisements.is_empty() {
+            false => "_ads".to_string(),
+            true => String::new(),
+        };
+        let title_images: String = match images.is_empty() {
+            false => "_images".to_string(),
+            true => String::new(),
+        };
+        let title: String = format!(
+            "container-{}{}${}_videos",
+            container_id, title_ads, title_images
+        );
+
+        Container::new(
+            advertisements.to_vec(),
+            container_id,
+            images.to_vec(),
+            title,
+            videos.to_vec(),
+        )
+    }
+
+    /// Get advertisements.
+    pub fn ads(&self) -> &Vec<Advertisement> {
+        &self.ads
+    }
+
+    /// Get container ID.
+    pub fn id(&self) -> u32 {
+        self.id
+    }
+
+    /// Get images.
+    pub fn images(&self) -> &Vec<Image> {
+        &self.images
+    }
+
+    /// Get title.
+    pub fn title(&self) -> &String {
+        &self.title
+    }
+
+    /// Get videos.
+    pub fn videos(&self) -> &Vec<Video> {
+        &self.videos
+    }
+}
+
+impl Display for Container {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "Container {{ id: {}, title: {} }}", self.id, self.title)
+    }
+}
+
+/* ************************************** ContainerService ************************************** */
 
 /// Container service.
 ///
@@ -136,10 +254,9 @@ impl ContainerService {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        service::{container::ContainerService, types::container::Container},
-        types::Result,
-    };
+    use crate::types::Result;
+
+    use super::{Container, ContainerService};
 
     #[tokio::test]
     async fn test_get_container() {

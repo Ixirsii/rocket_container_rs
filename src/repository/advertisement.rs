@@ -7,7 +7,7 @@ use log::{debug, trace};
 use serde::{Deserialize, Serialize};
 
 use crate::repository::client::Client;
-use crate::service::types::advertisement::Advertisement;
+use crate::service::advertisement::Advertisement;
 use crate::types::array_to_string;
 use crate::types::Result;
 
@@ -58,14 +58,6 @@ impl From<AdvertisementDto> for Advertisement {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_container::service::types::advertisement::Advertisement;
-    /// use rocket_container::repository::advertisement::list_advertisements;
-    ///
-    /// let advertisements: Vec<Advertisement> = list_advertisements(&client)
-    ///     .await?
-    ///     .into_iter()
-    ///     .map(Advertisement::from)
-    ///     .collect();;
     /// ```
     ///
     /// [1]: [crate::types::Advertisement]
@@ -97,14 +89,6 @@ impl Display for AdvertisementDto {
 /// # Examples
 ///
 /// ```rust
-/// use reqwest::Client;
-/// use rocket_container::repository::request;
-/// use rocket_container::repository::advertisement::{AdvertisementDto, AdvertisementsDto};
-///
-/// let advertisements: Vec<AdvertisementDto> =
-///     request::<AdvertisementsDto, ()>(client, ADVERTISEMENT_ENDPOINT, None)
-///         .await?
-///         .advertisements;
 /// ```
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct AdvertisementsDto {

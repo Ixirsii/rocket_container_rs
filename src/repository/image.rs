@@ -7,7 +7,7 @@ use log::trace;
 use serde::{Deserialize, Serialize};
 
 use crate::repository::client::Client;
-use crate::service::types::image::Image;
+use crate::service::image::Image;
 use crate::types::array_to_string;
 use crate::types::Result;
 
@@ -51,13 +51,6 @@ impl From<ImageDto> for Image {
     /// # Examples
     ///
     /// ```rust
-    /// use rocket_container::service::types::image::Image;
-    ///
-    /// let images: Vec<Image> = list_images(&client)
-    ///     .await?
-    ///     .into_iter()
-    ///     .map(Image::from)
-    ///     .collect();;
     /// ```
     ///
     /// [1]: [crate::types::Image]

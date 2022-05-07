@@ -1,11 +1,71 @@
 //! Advertisement service.
 
+use std::collections::HashMap;
+use std::fmt::{Display, Formatter};
+
 use log::trace;
+use serde::{Deserialize, Serialize};
 
 use crate::repository::advertisement::AdvertisementRepository;
 use crate::service::group;
-use crate::service::types::advertisement::{Advertisement, AdvertisementMap};
 use crate::types::Result;
+
+/* *************************************** Advertisement **************************************** */
+
+/// Advertisement asset returned from Rocket Container.
+///
+/// Container service returns a variant of [`AdvertisementDto`][1] with `id` field as a number and
+/// without `container_id` field. [`AdvertisementDto`][1]s returned from
+/// [`advertisement repository`][2] get converted into this type before being returned from the
+/// controller.
+///
+/// # Examples
+///
+/// ```rust
+/// ```
+///
+/// [1]: [crate::repository::types::advertisement::AdvertisementDto]
+/// [2]: [crate::repository::advertisement]
+///
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Advertisement {
+    /// Unique advertisement identifier.
+    id: u32,
+    /// Name of advertisement.
+    name: String,
+    /// Advertisement playback url.
+    url: String,
+}
+
+impl Advertisement {
+    /// Construct a new Advertisement.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// ```
+    pub fn new(id: u32, name: String, url: String) -> Self {
+        Advertisement { id, name, url }
+    }
+}
+
+impl Display for Advertisement {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Advertisement {{ id: {}, name: {}, url: {} }}",
+            self.id, self.name, self.url
+        )
+    }
+}
+
+/* ************************************** AdvertisementMap ************************************** */
+
+/// Type alias for a [`HashMap`] of [`u32`] to [`Vec`]`<`[`Advertisement`]`>`.
+pub type AdvertisementMap = HashMap<u32, Vec<Advertisement>>;
+
+/* ************************************ AdvertisementService ************************************ */
 
 /// Advertisement service.
 ///
@@ -88,13 +148,9 @@ impl AdvertisementService {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        repository::client::Client,
-        service::types::advertisement::{Advertisement, AdvertisementMap},
-        types::Result,
-    };
+    use crate::types::Result;
 
-    use super::AdvertisementService;
+    use super::{Advertisement, AdvertisementMap, AdvertisementService};
 
     #[tokio::test]
     async fn test_list_advertisements() {

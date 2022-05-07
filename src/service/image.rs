@@ -1,11 +1,69 @@
 //! Advertisement service.
 
-use log::trace;
+use std::collections::HashMap;
+use std::fmt::{Display, Formatter};
 
-use crate::repository::image::ImageRepository;
-use crate::service::group;
-use crate::service::types::image::{Image, ImageMap};
-use crate::types::Result;
+use log::trace;
+use serde::{Deserialize, Serialize};
+
+use crate::{repository::image::ImageRepository, service::group, types::Result};
+
+/* ******************************************* Image ******************************************** */
+
+/// Image asset returned from Rocket Container.
+///
+/// Container service returns a variant of [`ImageDto`][1] with `id` field as a number and
+/// without `container_id` field. [`ImageDto`][1]s returned from
+/// [`image repository`][2] get converted into this type before being returned from the
+/// controller.
+///
+/// # Examples
+///
+/// ```rust
+/// ```
+///
+/// [1]: [crate::repository::types::image::ImageDto]
+/// [2]: [crate::repository::image]
+///
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Image {
+    /// Unique image identifier.
+    id: u32,
+    /// Name of image.
+    name: String,
+    /// Image URL.
+    url: String,
+}
+
+impl Image {
+    /// Construct a new Image.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// ```
+    pub fn new(id: u32, name: String, url: String) -> Self {
+        Image { id, name, url }
+    }
+}
+
+impl Display for Image {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Image {{ id: {}, name: {}, url: {} }}",
+            self.id, self.name, self.url
+        )
+    }
+}
+
+/* ****************************************** ImageMap ****************************************** */
+
+/// Type alias for a [`HashMap`] of [`u32`] to [`Vec`]`<`[`Image`]`>`.
+pub type ImageMap = HashMap<u32, Vec<Image>>;
+
+/* **************************************** ImageService **************************************** */
 
 /// Image service.
 ///
@@ -77,12 +135,9 @@ impl ImageService {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        service::types::image::{Image, ImageMap},
-        types::Result,
-    };
+    use crate::types::Result;
 
-    use super::ImageService;
+    use super::{Image, ImageMap, ImageService};
 
     #[tokio::test]
     async fn test_list_images() {

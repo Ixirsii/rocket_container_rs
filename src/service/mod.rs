@@ -6,7 +6,6 @@ use std::hash::Hash;
 pub mod advertisement;
 pub mod container;
 pub mod image;
-pub mod types;
 pub mod video;
 
 fn group<I, K, V>(iter: I) -> HashMap<K, Vec<V>>

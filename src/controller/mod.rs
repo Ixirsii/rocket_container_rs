@@ -5,8 +5,8 @@ use rocket::{get, serde::json::Json, Responder, State};
 use serde::Serialize;
 
 use crate::service::{
-    advertisement::AdvertisementService,
-    types::{advertisement::Advertisement, container::Container, image::Image, video::Video},
+    advertisement::Advertisement, advertisement::AdvertisementService, container::Container,
+    image::Image, video::Video,
 };
 
 /* ************************************** Error Responder *************************************** */

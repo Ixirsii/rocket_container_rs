@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     repository::client::Client,
-    service::types::video::{AssetReference, Video, VideoBuilder},
+    service::video::{AssetReference, Video, VideoBuilder},
     types::{array_to_string, AssetType, Result, VideoType},
 };
 
