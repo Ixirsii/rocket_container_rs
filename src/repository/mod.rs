@@ -3,5 +3,4 @@
 pub mod advertisement;
 pub mod client;
 pub mod image;
-pub mod types;
 pub mod video;

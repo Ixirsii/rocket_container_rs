@@ -5,8 +5,7 @@ extern crate futures;
 use futures::future;
 use log::trace;
 
-use crate::repository::types::video::VideoDto;
-use crate::repository::video::VideoRepository;
+use crate::repository::video::{VideoDto, VideoRepository};
 use crate::service::group;
 use crate::service::types::video::{AssetReference, Video, VideoBuilder, VideoMap};
 use crate::types::{AssetType, Result, VideoType};
