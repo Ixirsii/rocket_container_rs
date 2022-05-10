@@ -1,13 +1,8 @@
-//! Wrapper for reqwest client.
+//! Wrapper for [`reqwest::Client`] which retries failed requests.
 
 extern crate reqwest;
 
-use std::borrow::Borrow;
-use std::cmp::min;
-use std::fmt::Debug;
-use std::future::Future;
-use std::thread;
-use std::time::Duration;
+use std::{borrow::Borrow, cmp::min, fmt::Debug, future::Future, thread, time::Duration};
 
 use log::{debug, error, trace, warn};
 use rand::{thread_rng, Rng};
@@ -22,7 +17,22 @@ const MAX_ATTEMPTS: u32 = 10;
 /// Maximum backoff delay when retrying a service call.
 const MAX_BACKOFF: u64 = 1_000;
 
-/// Wrapper for reqwest client.
+/// Wrapper for [`reqwest::Client`] which retries failed requests.
+///
+/// # Examples
+///
+/// ```rust
+/// use rocket_container::repository::{
+///     advertisement::{AdvertisementDto, AdvertisementsDto},
+///     client::Client
+/// };
+///
+/// let client: Client = Client::default();
+/// let advertisements: Vec<AdvertisementDto> = client
+///     .get::<AdvertisementsDto, ()>(ADVERTISEMENT_ENDPOINT, None)
+///     .await?
+///     .advertisements;
+/// ```
 #[derive(Default)]
 pub struct Client {
     /// Client.
@@ -50,6 +60,16 @@ impl Client {
     /// # Examples
     ///
     /// ```rust
+    /// use rocket_container::repository::{
+    ///     advertisement::{AdvertisementDto, AdvertisementsDto},
+    ///     client::Client
+    /// };
+    ///
+    /// let client: Client = Client::default();
+    /// let advertisements: Vec<AdvertisementDto> = client
+    ///     .get::<AdvertisementsDto, ()>(ADVERTISEMENT_ENDPOINT, None)
+    ///     .await?
+    ///     .advertisements;
     /// ```
     pub async fn get<T, Q>(&self, endpoint: &str, query: Option<Q>) -> Result<T>
     where

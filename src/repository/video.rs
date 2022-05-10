@@ -37,6 +37,11 @@ const VIDEO_TYPE: &str = "type";
 /// # Examples
 ///
 /// ```rust
+/// use rocket_container::repository::video::{AssetReferenceDto, VideoRepository};
+///
+/// let video_id: u32 = 1;
+/// let repository: VideoRepository = VideoRepository::default();
+/// let advertisements: Vec<AssetReferenceDto> = repository.list_asset_references(video_id).await?;
 /// ```
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -97,6 +102,10 @@ impl From<AssetReferenceDto> for AssetReference {
 /// # Examples
 ///
 /// ```rust
+/// use rocket_container::repository::video::{VideoDto, VideoRepository};
+///
+/// let repository: VideoRepository = VideoRepository::default();
+/// let advertisements: Vec<VideoDto> = repository.list_videos().await?;
 /// ```
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -189,12 +198,10 @@ impl From<VideoDto> for VideoBuilder {
 
 /* ************************************** VideoAssetsDto **************************************** */
 
-/// [Wrapper] for [Video]s.
+/// Wrapped video asset data returned from Rocket Video service.
 ///
-/// # Examples
-///
-/// ```rust
-/// ```
+/// [`VideoAssetsDto`]s are meant to be deserialized from network calls and not constructed
+/// directly.
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct VideoAssetsDto {
@@ -214,12 +221,9 @@ impl Display for VideoAssetsDto {
 
 /* ***************************************** VideosDto ****************************************** */
 
-/// [Wrapper] for [Video]s.
+/// Wrapped video data returned from Rocket Video service.
 ///
-/// # Examples
-///
-/// ```rust
-/// ```
+/// [`VideosDto`]s are meant to be deserialized from network calls and not constructed directly.
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct VideosDto {
     /// List of videos.
@@ -245,6 +249,10 @@ impl Display for VideosDto {
 /// # Examples
 ///
 /// ```rust
+/// use rocket_container::repository::video::{VideoDto, VideoRepository};
+///
+/// let repository: VideoRepository = VideoRepository::default();
+/// let advertisements: Vec<VideoDto> = repository.list_videos().await?;
 /// ```
 #[derive(Default)]
 pub struct VideoRepository {
@@ -263,6 +271,11 @@ impl VideoRepository {
     /// # Examples
     ///
     /// ```rust
+    /// use rocket_container::repository::video::{VideoDto, VideoRepository};
+    ///
+    /// let video_id: u32 = 1;
+    /// let repository: VideoRepository = VideoRepository::default();
+    /// let advertisements: VideoDto = repository.get_video(video_id).await?;
     /// ```
     pub async fn get_video(&self, video_id: u32) -> Result<VideoDto> {
         trace!("VideoRepository::get_video {}", video_id);
@@ -277,6 +290,12 @@ impl VideoRepository {
     /// # Examples
     ///
     /// ```rust
+    /// use rocket_container::repository::video::{AssetReferenceDto, VideoRepository};
+    ///
+    /// let video_id: u32 = 1;
+    /// let repository: VideoRepository = VideoRepository::default();
+    /// let advertisements: Vec<AssetReferenceDto> =
+    ///     repository.list_asset_references(video_id).await?;
     /// ```
     pub async fn list_asset_references(&self, video_id: u32) -> Result<Vec<AssetReferenceDto>> {
         trace!("VideoRepository::list_asset_references {}", video_id);
@@ -298,6 +317,16 @@ impl VideoRepository {
     /// # Examples
     ///
     /// ```rust
+    /// use rocket_container::{
+    ///     repository::video::{AssetReferenceDto, VideoRepository},
+    ///     types::AssetType,
+    /// };
+    ///
+    /// let video_id: u32 = 1;
+    /// let asset_type: AssetType = AssetType::Image;
+    /// let repository: VideoRepository = VideoRepository::default();
+    /// let advertisements: Vec<AssetReferenceDto> =
+    ///     repository.list_asset_references_by_type(video_id, asset_type).await?;
     /// ```
     pub async fn list_asset_references_by_type(
         &self,
@@ -327,6 +356,10 @@ impl VideoRepository {
     /// # Examples
     ///
     /// ```rust
+    /// use rocket_container::repository::video::{VideoDto, VideoRepository};
+    ///
+    /// let repository: VideoRepository = VideoRepository::default();
+    /// let advertisements: Vec<VideoDto> = repository.list_videos().await?;
     /// ```
     pub async fn list_videos(&self) -> Result<Vec<VideoDto>> {
         trace!("VideoRepository::list_videos");

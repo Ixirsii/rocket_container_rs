@@ -8,6 +8,7 @@ pub mod container;
 pub mod image;
 pub mod video;
 
+/// Group an [Iterator] of tuples of `(K, V)` into a [`HashMap`].
 fn group<I, K, V>(iter: I) -> HashMap<K, Vec<V>>
 where
     K: Eq + Hash,
