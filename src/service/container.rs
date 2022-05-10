@@ -192,6 +192,23 @@ impl ContainerService {
         ))
     }
 
+    /// Wrapper function for [`AdvertisementService::list_advertisements_by_container`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use rocket_container::service::{advertisement::Advertisement, container::ContainerService};
+    ///
+    /// let container_id: u32 = 1;
+    /// let service: ContainerService = ContainerService::default();
+    /// let advertisements: Vec<Advertisement> = service.list_advertisements(container_id).await?;
+    /// ```
+    pub async fn list_advertisements(&self, container_id: u32) -> Result<Vec<Advertisement>> {
+        self.advertisement_service
+            .list_advertisements_by_container(container_id)
+            .await
+    }
+
     /// Get all containers.
     ///
     /// # Examples

@@ -130,11 +130,7 @@ pub async fn get_advertisements(
 ) -> Result<Vec<Advertisement>> {
     trace!("GET /containers/{}/ads", container_id);
 
-    match service
-        .inner()
-        .list_advertisements_by_container(container_id)
-        .await
-    {
+    match service.inner().list_advertisements(container_id).await {
         Ok(advertisements) => Ok(Json(advertisements)),
         Err(error) => {
             error!(
