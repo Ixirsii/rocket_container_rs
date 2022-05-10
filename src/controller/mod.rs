@@ -178,7 +178,16 @@ pub async fn get_container(
 ) -> Result<Container> {
     trace!("GET /containers/{}", container_id);
 
-    todo!("get_container")
+    match service.inner().get_container(container_id).await {
+        Ok(container) => Ok(Json(container)),
+        Err(error) => {
+            error!("Error while getting container {} {}", container_id, error);
+
+            Err(Error::InternalServiceError(Json(ErrorResponse {
+                message: "No advertisements found for this container".to_string(),
+            })))
+        }
+    }
 }
 
 /* *************************** GET /containers/<container_id>/images **************************** */
