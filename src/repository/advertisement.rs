@@ -1,15 +1,22 @@
-//! Advertisement repository.
+//! Repository responsible for calling the Rocket Advertisement dependency and handling failures.
+//!
+//! Rocket Container's dependencies (Rocket Advertisement, Rocket Image, and Rocket Video) all
+//! return lists wrapped in an object. The only "data transformation" that happens at this layer
+//! is that the lists are unwrapped and returned directly.
 
-use std::fmt::{Display, Formatter};
-use std::sync::Arc;
+use std::{
+    fmt::{Display, Formatter},
+    sync::Arc,
+};
 
 use log::{debug, trace};
 use serde::{Deserialize, Serialize};
 
-use crate::repository::client::Client;
-use crate::service::advertisement::Advertisement;
-use crate::types::array_to_string;
-use crate::types::Result;
+use crate::{
+    repository::client::Client,
+    service::advertisement::Advertisement,
+    types::{array_to_string, Result},
+};
 
 /// Endpoint for Rocket Advertisement service.
 const ADVERTISEMENT_ENDPOINT: &str =
@@ -22,15 +29,16 @@ const CONTAINER_ID: &str = "containerId";
 
 /// Advertisement data returned from Rocket Advertisement service.
 ///
+/// [`AdvertisementDto`]s are meant to be deserialized from network calls and not constructed
+/// directly.
+///
 /// # Examples
 ///
 /// ```rust
-/// use reqwest::Client;
-/// use rocket_container::repository::advertisement::list_advertisements;
-/// use rocket_container::repository::advertisement::AdvertisementDto;
+/// use rocket_container::repository::advertisement::{AdvertisementDto, AdvertisementRepository};
 ///
-/// let client: Client = Client::new();
-//  let advertisements: Vec<AdvertisementDto> = list_advertisements(&client).await.unwrap();
+/// let repository: AdvertisementRepository = AdvertisementRepository::default();
+/// let advertisements: Vec<AdvertisementDto> = repository.list_advertisements().await?;
 /// ```
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -53,16 +61,7 @@ impl AdvertisementDto {
 }
 
 impl From<AdvertisementDto> for Advertisement {
-    /// Get an [`Advertisement`][1] from an [`AdvertisementDto`][2].
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
-    ///
-    /// [1]: [crate::types::Advertisement]
-    /// [2]: [crate::repository::types::advertisement::AdvertisementDto]
-    ///
+    /// Get an [`Advertisement`] from an [`AdvertisementDto`].
     fn from(advertisement_dto: AdvertisementDto) -> Self {
         Advertisement::new(
             advertisement_dto.id.parse().unwrap(),
@@ -84,12 +83,10 @@ impl Display for AdvertisementDto {
 
 /* ************************************* AdvertisementsDto ************************************** */
 
-/// [Wrapper] for [Advertisement]s.
+/// Wrapped advertisement data returned from Rocket Advertisement service.
 ///
-/// # Examples
-///
-/// ```rust
-/// ```
+/// [`AdvertisementsDto`]s are meant to be deserialized from network calls and not constructed
+/// directly.
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct AdvertisementsDto {
     /// List of advertisements.
@@ -116,6 +113,10 @@ impl Display for AdvertisementsDto {
 /// # Examples
 ///
 /// ```rust
+/// use rocket_container::repository::advertisement::{AdvertisementDto, AdvertisementRepository};
+///
+/// let repository: AdvertisementRepository = AdvertisementRepository::default();
+/// let advertisements: Vec<AdvertisementDto> = repository.list_advertisements().await?;
 /// ```
 #[derive(Default)]
 pub struct AdvertisementRepository {
@@ -134,6 +135,10 @@ impl<'a> AdvertisementRepository {
     /// # Examples
     ///
     /// ```rust
+    /// use rocket_container::repository::advertisement::{AdvertisementDto, AdvertisementRepository};
+    ///
+    /// let repository: AdvertisementRepository = AdvertisementRepository::default();
+    /// let advertisements: Vec<AdvertisementDto> = repository.list_advertisements().await?;
     /// ```
     pub async fn list_advertisements(&self) -> Result<Vec<AdvertisementDto>> {
         trace!("AdvertisementRepository::list_advertisements");
@@ -154,6 +159,13 @@ impl<'a> AdvertisementRepository {
     /// # Examples
     ///
     /// ```rust
+    /// use rocket_container::repository::advertisement::{AdvertisementDto, AdvertisementRepository};
+    ///
+    /// let container_id: u32 = 1;
+    /// let repository: AdvertisementRepository = AdvertisementRepository::default();
+    /// let advertisements: Vec<AdvertisementDto> = repository
+    ///     .list_advertisements_by_container(container_id)
+    ///     .await?;
     /// ```
     pub async fn list_advertisements_by_container(
         &self,

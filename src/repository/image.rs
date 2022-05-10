@@ -1,15 +1,22 @@
-//! Image repository.
+//! Repository responsible for calling the Rocket Image dependency and handling failures.
+//!
+//! Rocket Container's dependencies (Rocket Advertisement, Rocket Image, and Rocket Video) all
+//! return lists wrapped in an object. The only "data transformation" that happens at this layer
+//! is that the lists are unwrapped and returned directly.
 
-use std::fmt::{Display, Formatter};
-use std::sync::Arc;
+use std::{
+    fmt::{Display, Formatter},
+    sync::Arc,
+};
 
 use log::trace;
 use serde::{Deserialize, Serialize};
 
-use crate::repository::client::Client;
-use crate::service::image::Image;
-use crate::types::array_to_string;
-use crate::types::Result;
+use crate::{
+    repository::client::Client,
+    service::image::Image,
+    types::{array_to_string, Result},
+};
 
 /// Container ID query parameter.
 const CONTAINER_ID: &str = "containerId";
@@ -24,6 +31,10 @@ const IMAGE_ENDPOINT: &str = "http://images.rocket-stream.bottlerocketservices.c
 /// # Examples
 ///
 /// ```rust
+/// use rocket_container::repository::image::{ImageDto, ImageRepository};
+///
+/// let repository = ImageRepository::default();
+/// let images: Vec<ImageDto> = repository.get_images().await?;
 /// ```
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -46,16 +57,7 @@ impl ImageDto {
 }
 
 impl From<ImageDto> for Image {
-    /// Get an [`Image`][1] from an [`ImageDto`][2].
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
-    ///
-    /// [1]: [crate::types::Image]
-    /// [2]: [crate::repository::types::image::ImageDto]
-    ///
+    /// Get an [`Image`] from an [`ImageDto`].
     fn from(image_dto: ImageDto) -> Self {
         Image::new(image_dto.id.parse().unwrap(), image_dto.name, image_dto.url)
     }
@@ -73,12 +75,9 @@ impl Display for ImageDto {
 
 /* ***************************************** ImagesDto ****************************************** */
 
-/// [Wrapper] for [Image]s.
+/// Wrapped image data returned from Rocket Image service.
 ///
-/// # Examples
-///
-/// ```rust
-/// ```
+/// [`ImagesDto`]s are meant to be deserialized from network calls and not constructed directly.
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ImagesDto {
     /// List of images.
@@ -100,6 +99,10 @@ impl Display for ImagesDto {
 /// # Examples
 ///
 /// ```rust
+/// use rocket_container::repository::image::{ImageDto, ImageRepository};
+///
+/// let repository: ImageRepository = ImageRepository::default();
+/// let images: Vec<ImageDto> = repository.list_images().await?;
 /// ```
 #[derive(Default)]
 pub struct ImageRepository {
@@ -118,6 +121,10 @@ impl ImageRepository {
     /// # Examples
     ///
     /// ```rust
+    /// use rocket_container::repository::image::{ImageDto, ImageRepository};
+    ///
+    /// let repository: ImageRepository = ImageRepository::default();
+    /// let images: Vec<ImageDto> = repository.list_images().await?;
     /// ```
     pub async fn list_images(&self) -> Result<Vec<ImageDto>> {
         trace!("Listing all images");
@@ -135,7 +142,12 @@ impl ImageRepository {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust
+    /// use rocket_container::repository::image::{ImageDto, ImageRepository};
+    ///
+    /// let container_id: u32 = 1;
+    /// let repository: ImageRepository = ImageRepository::default();
+    /// let images: Vec<ImageDto> = repository.list_images_by_container(container_id).await?;
     /// ```
     pub async fn list_images_by_container(&self, container_id: u32) -> Result<Vec<ImageDto>> {
         trace!("Listing images for container {}", container_id);

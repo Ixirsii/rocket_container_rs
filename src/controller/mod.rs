@@ -5,8 +5,10 @@ use rocket::{get, serde::json::Json, Responder, State};
 use serde::Serialize;
 
 use crate::service::{
-    advertisement::Advertisement, advertisement::AdvertisementService, container::Container,
-    image::Image, video::Video,
+    advertisement::Advertisement,
+    container::{Container, ContainerService},
+    image::Image,
+    video::Video,
 };
 
 /* ************************************** Error Responder *************************************** */
@@ -16,6 +18,17 @@ use crate::service::{
 /// # Examples
 ///
 /// ```rust
+/// use rocket_container::service::advertisement::Advertisement;
+///
+/// use rocket_container::{
+///     controller::{Error, ErrorResponse, Result},
+///     service::advertisement::Advertisement
+/// };
+/// use rocket::serde::json::Json;
+///
+/// let error: Result<Advertisement> = Err(Error::InternalServiceError(Json(ErrorResponse {
+///     message: "No advertisements found for this container".to_string(),
+/// })));
 /// ```
 #[derive(Debug, Responder)]
 pub enum Error {
@@ -37,6 +50,15 @@ pub enum Error {
 /// # Examples
 ///
 /// ```rust
+/// use rocket_container::{
+///     controller::{Error, ErrorResponse, Result},
+///     service::advertisement::Advertisement
+/// };
+/// use rocket::serde::json::Json;
+///
+/// let error: Result<Advertisement> = Err(Error::InternalServiceError(Json(ErrorResponse {
+///     message: "No advertisements found for this container".to_string(),
+/// })));
 /// ```
 #[derive(Debug, Serialize, Responder)]
 pub struct ErrorResponse {
@@ -55,11 +77,20 @@ pub struct ErrorResponse {
 /// ```rust
 /// use rocket_container::{
 ///     controller::{Error, ErrorResponse, Result},
-///     service::types::advertisement::Advertisement
+///     service::advertisement::Advertisement
 /// };
 /// use rocket::serde::json::Json;
 ///
 /// let ok: Result<Advertisement> = Ok(Json(advertisement));
+/// ```
+///
+/// ```rust
+/// use rocket_container::{
+///     controller::{Error, ErrorResponse, Result},
+///     service::advertisement::Advertisement
+/// };
+/// use rocket::serde::json::Json;
+///
 /// let error: Result<Advertisement> = Err(Error::InternalServiceError(Json(ErrorResponse {
 ///     message: "No advertisements found for this container".to_string(),
 /// })));
@@ -78,17 +109,24 @@ pub type Result<T> = std::result::Result<Json<T>, Error>;
 /// #[macro_use]
 /// extern crate rocket;
 ///
-/// use rocket_container::controller::get_advertisements;
+/// use rocket_container::{
+///     controller::get_advertisements,
+///     service::container::ContainerService,
+/// };
 ///
 /// #[launch]
 /// pub fn rocket() -> _ {
-///     rocket::build().mount("/", routes![get_advertisements])
+///     let container_service: ContainerService = ContainerService::default();
+///
+///     rocket::build()
+///         .manage(container_service)
+///         .mount( "/", routes![get_advertisements])
 /// }
 /// ```
 #[get("/containers/<container_id>/ads")]
 pub async fn get_advertisements(
     container_id: u32,
-    service: &State<AdvertisementService>,
+    service: &State<ContainerService>,
 ) -> Result<Vec<Advertisement>> {
     trace!("GET /containers/{}/ads", container_id);
 
@@ -123,15 +161,25 @@ pub async fn get_advertisements(
 /// #[macro_use]
 /// extern crate rocket;
 ///
-/// use rocket_container::controller::get_container;
+/// use rocket_container::{
+///     controller::get_container,
+///     service::container::ContainerService,
+/// };
 ///
 /// #[launch]
 /// pub fn rocket() -> _ {
-///     rocket::build().mount("/", routes![get_container])
+///     let container_service: ContainerService = ContainerService::default();
+///
+///     rocket::build()
+///         .manage(container_service)
+///         .mount("/", routes![get_container])
 /// }
 /// ```
 #[get("/containers/<container_id>")]
-pub async fn get_container(container_id: u32) -> Result<Container> {
+pub async fn get_container(
+    container_id: u32,
+    service: &State<ContainerService>,
+) -> Result<Container> {
     trace!("GET /containers/{}", container_id);
 
     todo!("get_container")
@@ -149,15 +197,25 @@ pub async fn get_container(container_id: u32) -> Result<Container> {
 /// #[macro_use]
 /// extern crate rocket;
 ///
-/// use rocket_container::controller::get_images;
+/// use rocket_container::{
+///     controller::get_images,
+///     service::container::ContainerService,
+/// };
 ///
 /// #[launch]
 /// pub fn rocket() -> _ {
-///     rocket::build().mount("/", routes![get_images])
+///     let container_service: ContainerService = ContainerService::default();
+///
+///     rocket::build()
+///         .manage(container_service)
+///         .mount("/", routes![get_images])
 /// }
 /// ```
 #[get("/containers/<container_id>/images")]
-pub async fn get_images(container_id: u32) -> Result<Vec<Image>> {
+pub async fn get_images(
+    container_id: u32,
+    service: &State<ContainerService>,
+) -> Result<Vec<Image>> {
     trace!("GET /containers/{}/images", container_id);
 
     todo!("get_images")
@@ -175,15 +233,25 @@ pub async fn get_images(container_id: u32) -> Result<Vec<Image>> {
 /// #[macro_use]
 /// extern crate rocket;
 ///
-/// use rocket_container::controller::get_videos;
+/// use rocket_container::{
+///     controller::get_videos,
+///     service::container::ContainerService,
+/// };
 ///
 /// #[launch]
 /// pub fn rocket() -> _ {
-///     rocket::build().mount("/", routes![get_videos])
+///     let container_service: ContainerService = ContainerService::default();
+///
+///     rocket::build()
+///         .manage(container_service)
+///         .mount("/", routes![get_videos])
 /// }
 /// ```
 #[get("/containers/<container_id>/videos")]
-pub async fn get_videos(container_id: u32) -> Result<Vec<Video>> {
+pub async fn get_videos(
+    container_id: u32,
+    service: &State<ContainerService>,
+) -> Result<Vec<Video>> {
     trace!("GET /containers/{}/videos", container_id);
 
     todo!("get_videos")
@@ -201,15 +269,22 @@ pub async fn get_videos(container_id: u32) -> Result<Vec<Video>> {
 /// #[macro_use]
 /// extern crate rocket;
 ///
-/// use rocket_container::controller::list_containers;
+/// use rocket_container::{
+///     controller::list_containers,
+///     service::container::ContainerService,
+/// };
 ///
 /// #[launch]
 /// pub fn rocket() -> _ {
-///     rocket::build().mount("/", routes![list_containers])
+///     let container_service: ContainerService = ContainerService::default();
+///
+///     rocket::build()
+///         .manage(container_service)
+///         .mount("/", routes![list_containers])
 /// }
 /// ```
 #[get("/containers")]
-pub async fn list_containers() -> Result<Vec<Container>> {
+pub async fn list_containers(service: &State<ContainerService>) -> Result<Vec<Container>> {
     trace!("GET /containers");
 
     todo!("list_containers")

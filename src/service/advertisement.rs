@@ -16,17 +16,21 @@ use crate::types::Result;
 ///
 /// Container service returns a variant of [`AdvertisementDto`][1] with `id` field as a number and
 /// without `container_id` field. [`AdvertisementDto`][1]s returned from
-/// [`advertisement repository`][2] get converted into this type before being returned from the
+/// [`AdvertisementRepository`] get converted into this type before being returned from the
 /// controller.
 ///
 /// # Examples
 ///
 /// ```rust
+/// use rocket_container::service::advertisement::{Advertisement, AdvertisementService};
+///
+/// let container_id: u32 = 1;
+/// let service: AdvertisementService = AdvertisementService::default();
+/// let advertisements: Vec<Advertisement> =
+///     service.list_advertisements_by_container(container_id).await?;
 /// ```
 ///
-/// [1]: [crate::repository::types::advertisement::AdvertisementDto]
-/// [2]: [crate::repository::advertisement]
-///
+/// [1]: [rocket_container::repository::advertisement::AdvertisementDto]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Advertisement {
@@ -40,11 +44,6 @@ pub struct Advertisement {
 
 impl Advertisement {
     /// Construct a new Advertisement.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
     pub fn new(id: u32, name: String, url: String) -> Self {
         Advertisement { id, name, url }
     }
@@ -63,6 +62,15 @@ impl Display for Advertisement {
 /* ************************************** AdvertisementMap ************************************** */
 
 /// Type alias for a [`HashMap`] of [`u32`] to [`Vec`]`<`[`Advertisement`]`>`.
+///
+/// # Examples
+///
+/// ```rust
+/// use rocket_container::service::advertisement::{AdvertisementMap, AdvertisementService};
+///
+/// let service: AdvertisementService = AdvertisementService::default();
+/// let advertisement_map: AdvertisementMap = service.list_advertisements().await?;
+/// ```
 pub type AdvertisementMap = HashMap<u32, Vec<Advertisement>>;
 
 /* ************************************ AdvertisementService ************************************ */
@@ -75,6 +83,10 @@ pub type AdvertisementMap = HashMap<u32, Vec<Advertisement>>;
 /// # Examples
 ///
 /// ```rust
+/// use rocket_container::service::advertisement::{AdvertisementMap, AdvertisementService};
+///
+/// let service: AdvertisementService = AdvertisementService::default();
+/// let advertisement_map: AdvertisementMap = service.list_advertisements().await?;
 /// ```
 #[derive(Default)]
 pub struct AdvertisementService {
@@ -84,11 +96,6 @@ pub struct AdvertisementService {
 
 impl AdvertisementService {
     /// Create a new [`AdvertisementService`].
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
     pub fn new(repository: AdvertisementRepository) -> Self {
         Self { repository }
     }
@@ -98,6 +105,10 @@ impl AdvertisementService {
     /// # Examples
     ///
     /// ```rust
+    /// use rocket_container::service::advertisement::{AdvertisementMap, AdvertisementService};
+    ///
+    /// let service: AdvertisementService = AdvertisementService::default();
+    /// let advertisement_map: AdvertisementMap = service.list_advertisements().await?;
     /// ```
     pub async fn list_advertisements(&self) -> Result<AdvertisementMap> {
         trace!("AdvertisementService::list_advertisements");
@@ -122,6 +133,12 @@ impl AdvertisementService {
     /// # Examples
     ///
     /// ```rust
+    /// use rocket_container::service::advertisement::{Advertisement, AdvertisementService};
+    ///
+    /// let container_id: u32 = 1;
+    /// let service: AdvertisementService = AdvertisementService::default();
+    /// let advertisements: Vec<Advertisement> =
+    ///     service.list_advertisements_by_container(container_id).await?;
     /// ```
     pub async fn list_advertisements_by_container(
         &self,

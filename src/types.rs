@@ -1,7 +1,8 @@
 //! Public crate type definitions.
 
-use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
+
+use serde::{Deserialize, Serialize};
 
 /* ******************************************* Types ******************************************** */
 
@@ -14,7 +15,7 @@ use std::fmt::{Display, Formatter};
 /// # Examples
 ///
 /// ```rust
-/// use rocket_container::{repository::types::video::AssetReferenceDto, types::AssetType};
+/// use rocket_container::{repository::video::AssetReferenceDto, types::AssetType};
 ///
 /// let asset_reference: AssetReferenceDto = AssetReferenceDto::new(
 ///     "120".to_string(),

@@ -25,7 +25,10 @@ use crate::{
 /// # Examples
 ///
 /// ```rust
-/// todo!("Example");
+/// use rocket_container::service::container::{Container, ContainerService};
+///
+/// let service: ContainerService = ContainerService::default();
+/// let containers: Vec<Container> = service.list_containers().await?;
 /// ```
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Container {
@@ -38,12 +41,6 @@ pub struct Container {
 
 impl Container {
     /// Construct a new Container.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// todo!("Example");
-    /// ```
     pub fn new(
         ads: Vec<Advertisement>,
         id: u32,
@@ -61,12 +58,6 @@ impl Container {
     }
 
     /// Create a container from a list of advertisements, images, and videos.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// todo!("Example");
-    /// ```
     pub fn from(
         container_id: u32,
         advertisements: &[Advertisement],
@@ -137,6 +128,10 @@ impl Display for Container {
 /// # Examples
 ///
 /// ```rust
+/// use rocket_container::service::container::{Container, ContainerService};
+///
+/// let service: ContainerService = ContainerService::default();
+/// let containers: Vec<Container> = service.list_containers().await?;
 /// ```
 #[derive(Default)]
 pub struct ContainerService {
@@ -167,6 +162,11 @@ impl ContainerService {
     /// # Examples
     ///
     /// ```rust
+    /// use rocket_container::service::container::{Container, ContainerService};
+    ///
+    /// let container_id: u32 = 1;
+    /// let service: ContainerService = ContainerService::default();
+    /// let container: Container = service.get_container(container_id).await?;
     /// ```
     pub async fn get_container(&self, container_id: u32) -> Result<Container> {
         trace!("get_container: {}", container_id);
@@ -197,6 +197,10 @@ impl ContainerService {
     /// # Examples
     ///
     /// ```rust
+    /// use rocket_container::service::container::{Container, ContainerService};
+    ///
+    /// let service: ContainerService = ContainerService::default();
+    /// let containers: Vec<Container> = service.list_containers().await?;
     /// ```
     pub async fn list_containers(&self) -> Result<Vec<Container>> {
         trace!("list_containers");
@@ -222,11 +226,6 @@ impl ContainerService {
     ///
     /// Gets advertisements for a container from an [`AdvertisementMap`], images from an
     /// [`ImageMap`], and combines them with a list of videos to make a container.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
     fn build_container(
         &self,
         container_id: u32,

@@ -14,17 +14,20 @@ use crate::{repository::image::ImageRepository, service::group, types::Result};
 ///
 /// Container service returns a variant of [`ImageDto`][1] with `id` field as a number and
 /// without `container_id` field. [`ImageDto`][1]s returned from
-/// [`image repository`][2] get converted into this type before being returned from the
+/// [`ImageRepository`] get converted into this type before being returned from the
 /// controller.
 ///
 /// # Examples
 ///
 /// ```rust
+/// use rocket_container::service::image::{Image, ImageService};
+///
+/// let container_id: u32 = 1;
+/// let service: ImageService = ImageService::default();
+/// let containers: Vec<Image> = service.list_images_by_container(container_id).await?;
 /// ```
 ///
-/// [1]: [crate::repository::types::image::ImageDto]
-/// [2]: [crate::repository::image]
-///
+/// [1]: [crate::repository::image::ImageDto]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Image {
@@ -38,11 +41,6 @@ pub struct Image {
 
 impl Image {
     /// Construct a new Image.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
     pub fn new(id: u32, name: String, url: String) -> Self {
         Image { id, name, url }
     }
@@ -61,6 +59,15 @@ impl Display for Image {
 /* ****************************************** ImageMap ****************************************** */
 
 /// Type alias for a [`HashMap`] of [`u32`] to [`Vec`]`<`[`Image`]`>`.
+///
+/// # Examples
+///
+/// ```rust
+/// use rocket_container::service::image::{ImageMap, ImageService};
+///
+/// let service: ImageService = ImageService::default();
+/// let containers: ImageMap = service.list_images().await?;
+/// ```
 pub type ImageMap = HashMap<u32, Vec<Image>>;
 
 /* **************************************** ImageService **************************************** */
@@ -73,6 +80,10 @@ pub type ImageMap = HashMap<u32, Vec<Image>>;
 /// # Examples
 ///
 /// ```rust
+/// use rocket_container::service::image::{ImageMap, ImageService};
+///
+/// let service: ImageService = ImageService::default();
+/// let containers: ImageMap = service.list_images().await?;
 /// ```
 #[derive(Default)]
 pub struct ImageService {
@@ -82,11 +93,6 @@ pub struct ImageService {
 
 impl ImageService {
     /// Create a new [`ImageService`].
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
     pub fn new(repository: ImageRepository) -> Self {
         Self { repository }
     }
@@ -96,6 +102,10 @@ impl ImageService {
     /// # Examples
     ///
     /// ```rust
+    /// use rocket_container::service::image::{ImageMap, ImageService};
+    ///
+    /// let service: ImageService = ImageService::default();
+    /// let containers: ImageMap = service.list_images().await?;
     /// ```
     pub async fn list_images(&self) -> Result<ImageMap> {
         trace!("ImageService::list_images");
@@ -115,6 +125,11 @@ impl ImageService {
     /// # Examples
     ///
     /// ```rust
+    /// use rocket_container::service::image::{Image, ImageService};
+    ///
+    /// let container_id: u32 = 1;
+    /// let service: ImageService = ImageService::default();
+    /// let containers: Vec<Image> = service.list_images_by_container(container_id).await?;
     /// ```
     pub async fn list_images_by_container(&self, container_id: u32) -> Result<Vec<Image>> {
         trace!("ImageService::list_images_by_container {}", container_id);

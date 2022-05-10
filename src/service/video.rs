@@ -27,11 +27,15 @@ use crate::{
 /// # Examples
 ///
 /// ```rust
+/// use rocket_container::service::video::{AssetReference, VideoService};
+///
+/// let video_id: u32 = 1;
+/// let service: VideoService = VideoService::default();
+/// let assets: Vec<AssetReference> = service.list_asset_references(video_id).await?;
 /// ```
 ///
-/// [1]: [crate::repository::types::video::AssetReferenceDto]
+/// [1]: [crate::repository::video::AssetReferenceDto]
 /// [2]: [crate::repository::video]
-///
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AssetReference {
@@ -72,17 +76,20 @@ impl Display for AssetReference {
 ///
 /// Container service returns a variant of [`VideoDto`][1] with `id` field as a number and
 /// without `container_id` field. [`VideoDto`][1]s returned from
-/// [`video repository`][2] get converted into this type before being returned from the
+/// [`VideoRepository`] get converted into this type before being returned from the
 /// controller.
 ///
 /// # Examples
 ///
 /// ```rust
+/// use rocket_container::service::video::{Video, VideoService};
+///
+/// let container_id: u32 = 1;
+/// let service: VideoService = VideoService::default();
+/// let videos: Vec<Video> = service.list_videos_by_container(container_id).await?;
 /// ```
 ///
-/// [1]: [crate::repository::types::video::VideoDto]
-/// [2]: [crate::repository::video]
-///
+/// [1]: [crate::repository::video::VideoDto]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Video {
@@ -104,11 +111,6 @@ pub struct Video {
 
 impl Video {
     /// Construct a new Video.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
     pub fn new(
         assets: Vec<AssetReference>,
         description: String,
@@ -132,21 +134,11 @@ impl Video {
     /// Construct a new [VideoBuilder].
     ///
     /// Alias for [VideoBuilder::new].
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
     pub fn builder(id: u32) -> VideoBuilder {
         VideoBuilder::new(id)
     }
 
     /// Get a [VideoBuilder] with values initialized from this [Video].
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
     pub fn to_builder(&self) -> VideoBuilder {
         VideoBuilder::new(self.id)
             .assets(self.assets.clone())
@@ -178,11 +170,6 @@ impl Display for Video {
 /* **************************************** VideoBuilder **************************************** */
 
 /// Builder class for [Video].
-///
-/// # Examples
-///
-/// ```rust
-/// ```
 pub struct VideoBuilder {
     /// See [Video::assets].
     ///
@@ -216,11 +203,6 @@ pub struct VideoBuilder {
 
 impl VideoBuilder {
     /// Construct a new VideoBuilder.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
     pub fn new(id: u32) -> Self {
         VideoBuilder {
             assets: Vec::new(),
@@ -237,11 +219,6 @@ impl VideoBuilder {
     ///
     /// Builds a [Video], transferring ownership of the builder's internal state to the returned
     /// [Video].
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
     pub fn build(self) -> Video {
         Video {
             assets: self.assets,
@@ -257,11 +234,6 @@ impl VideoBuilder {
     /// Build a [Video].
     ///
     /// Builds a [Video], cloning the builder's internal state.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
     pub fn build_clone(&self) -> Video {
         Video {
             assets: self.assets.clone(),
@@ -277,77 +249,42 @@ impl VideoBuilder {
     /// Push an asset into `VideoBuilder::assets`.
     ///
     /// Singular form of [VideoBuilder::assets].
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
     pub fn asset(mut self, asset: AssetReference) -> Self {
         self.assets.push(asset);
         self
     }
 
     /// Set `VideoBuilder::assets`.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
     pub fn assets(mut self, assets: Vec<AssetReference>) -> Self {
         self.assets = assets;
         self
     }
 
     /// Set `VideoBuilder::description`.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
     pub fn description(mut self, description: String) -> Self {
         self.description = Some(description);
         self
     }
 
     /// Set `VideoBuilder::expiration_date`.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
     pub fn expiration_date(mut self, expiration_date: String) -> Self {
         self.expiration_date = Some(expiration_date);
         self
     }
 
     /// Set `VideoBuilder::playback_url`.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
     pub fn playback_url(mut self, playback_url: String) -> Self {
         self.playback_url = Some(playback_url);
         self
     }
 
     /// Set `VideoBuilder::title`.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
     pub fn title(mut self, title: String) -> Self {
         self.title = Some(title);
         self
     }
 
     /// Set `VideoBuilder::r#type`.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
     pub fn r#type(mut self, r#type: VideoType) -> Self {
         self.r#type = Some(r#type);
         self
@@ -380,7 +317,16 @@ impl Display for VideoBuilder {
 
 /* ****************************************** VideoMap ****************************************** */
 
-/// Type alias for a [`HashMap`] of [`u32`] to [`Vec`]`<`[`Video`]`>`.  
+/// Type alias for a [`HashMap`] of [`u32`] to [`Vec`]`<`[`Video`]`>`.
+///
+/// # Examples
+///
+/// ```rust
+/// use rocket_container::service::video::{VideoMap, VideoService};
+///
+/// let service: VideoService = VideoService::default();
+/// let videos: VideoMap = service.list_videos().await?;
+/// ```
 pub type VideoMap = HashMap<u32, Vec<Video>>;
 
 /* **************************************** VideoService **************************************** */
@@ -393,6 +339,11 @@ pub type VideoMap = HashMap<u32, Vec<Video>>;
 /// # Examples
 ///
 /// ```rust
+/// use rocket_container::service::video::{Video, VideoService};
+///
+/// let video_id: u32 = 1;
+/// let service: VideoService = VideoService::default();
+/// let video: Video = service.get_video(video_id).await?;
 /// ```
 #[derive(Default)]
 pub struct VideoService {
@@ -402,11 +353,6 @@ pub struct VideoService {
 
 impl<'a> VideoService {
     //// Create a new [`VideoService`].
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
     pub fn new(video_repository: VideoRepository) -> Self {
         Self { video_repository }
     }
@@ -416,6 +362,11 @@ impl<'a> VideoService {
     /// # Examples
     ///
     /// ```rust
+    /// use rocket_container::service::video::{Video, VideoService};
+    ///
+    /// let video_id: u32 = 1;
+    /// let service: VideoService = VideoService::default();
+    /// let video: Video = service.get_video(video_id).await?;
     /// ```
     pub async fn get_video(&self, video_id: u32) -> Result<Video> {
         trace!("VideoService::get_video {}", video_id);
@@ -433,6 +384,11 @@ impl<'a> VideoService {
     /// # Examples
     ///
     /// ```rust
+    /// use rocket_container::service::video::{AssetReference, VideoService};
+    ///
+    /// let video_id: u32 = 1;
+    /// let service: VideoService = VideoService::default();
+    /// let assets: Vec<AssetReference> = service.list_asset_references(video_id).await?;
     /// ```
     pub async fn list_asset_references(&self, video_id: u32) -> Result<Vec<AssetReference>> {
         trace!("VideoService::list_asset_references {}", video_id);
@@ -453,6 +409,13 @@ impl<'a> VideoService {
     /// # Examples
     ///
     /// ```rust
+    /// use rocket_container::{service::video::{AssetReference, VideoService}, types::AssetType};
+    ///
+    /// let video_id: u32 = 1;
+    /// let asset_type: AssetType = AssetType::Image;
+    /// let service: VideoService = VideoService::default();
+    /// let assets: Vec<AssetReference> =
+    ///     service.list_asset_references_by_type(video_id, asset_type).await?;
     /// ```
     pub async fn list_asset_references_by_type(
         &self,
@@ -481,6 +444,10 @@ impl<'a> VideoService {
     /// # Examples
     ///
     /// ```rust
+    /// use rocket_container::service::video::{VideoMap, VideoService};
+    ///
+    /// let service: VideoService = VideoService::default();
+    /// let videos: VideoMap = service.list_videos().await?;
     /// ```
     pub async fn list_videos(&self) -> Result<VideoMap> {
         trace!("VideoService::list_videos");
@@ -503,6 +470,11 @@ impl<'a> VideoService {
     /// # Examples
     ///
     /// ```rust
+    /// use rocket_container::service::video::{Video, VideoService};
+    ///
+    /// let container_id: u32 = 1;
+    /// let service: VideoService = VideoService::default();
+    /// let videos: Vec<Video> = service.list_videos_by_container(container_id).await?;
     /// ```
     pub async fn list_videos_by_container(&self, container_id: u32) -> Result<Vec<Video>> {
         trace!("VideoService::list_videos_by_container {}", container_id);
@@ -525,6 +497,11 @@ impl<'a> VideoService {
     /// # Examples
     ///
     /// ```rust
+    /// use rocket_container::{service::video::{VideoMap, VideoService}, types::VideoType};
+    ///
+    /// let video_type: VideoType = VideoType::Movie;
+    /// let service: VideoService = VideoService::default();
+    /// let videos: VideoMap = service.list_videos_by_type(video_type).await?;
     /// ```
     pub async fn list_videos_by_type(&self, video_type: VideoType) -> Result<VideoMap> {
         trace!("VideoService::list_videos_by_type {}", video_type);
@@ -547,6 +524,13 @@ impl<'a> VideoService {
     /// # Examples
     ///
     /// ```rust
+    /// use rocket_container::{service::video::{VideoMap, VideoService}, types::VideoType};
+    ///
+    /// let container_id: u32 = 1;
+    /// let video_type: VideoType = VideoType::Movie;
+    /// let service: VideoService = VideoService::default();
+    /// let videos: VideoMap =
+    ///     service.list_videos_by_container_and_type(container_id, video_type).await?;
     /// ```
     pub async fn list_videos_by_container_and_type(
         &self,
