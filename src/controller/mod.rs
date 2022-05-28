@@ -217,7 +217,7 @@ pub async fn get_advertisements(
 ) -> Result<Vec<Advertisement>> {
     trace!("GET /containers/{}/ads", container_id);
 
-    match service.inner().list_advertisements(container_id).await {
+    match service.inner().get_advertisements(container_id).await {
         Ok(advertisements) => Ok(Json(advertisements)),
         Err(error) => {
             error!(
@@ -265,7 +265,19 @@ pub async fn get_images(
 ) -> Result<Vec<Image>> {
     trace!("GET /containers/{}/images", container_id);
 
-    todo!("get_images")
+    match service.inner().get_images(container_id).await {
+        Ok(images) => Ok(Json(images)),
+        Err(error) => {
+            error!(
+                "Error while listing images by container {} {}",
+                container_id, error
+            );
+
+            Err(Error::InternalServiceError(Json(ErrorResponse {
+                message: "Error getting images".to_string(),
+            })))
+        }
+    }
 }
 
 /* *************************** GET /containers/<container_id>/videos **************************** */

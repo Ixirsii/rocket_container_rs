@@ -54,6 +54,18 @@ mod test {
     use super::rocket;
 
     #[test]
+    fn list_container() {
+        // Given
+        let client = Client::tracked(rocket()).expect("valid rocket instance");
+
+        // When
+        let response = client.get("/containers").dispatch();
+
+        // Then
+        assert_eq!(response.status(), Status::Ok);
+    }
+
+    #[test]
     fn get_container() {
         // Given
         let client = Client::tracked(rocket()).expect("valid rocket instance");
@@ -78,12 +90,12 @@ mod test {
     }
 
     #[test]
-    fn list_container() {
+    fn get_images() {
         // Given
         let client = Client::tracked(rocket()).expect("valid rocket instance");
 
         // When
-        let response = client.get("/containers").dispatch();
+        let response = client.get("/containers/0/images").dispatch();
 
         // Then
         assert_eq!(response.status(), Status::Ok);

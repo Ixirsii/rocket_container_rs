@@ -141,11 +141,18 @@ impl ContainerService {
         image_service: ImageService,
         video_service: VideoService,
     ) -> Self {
-        Self {
+        ContainerService {
             advertisement_service,
             image_service,
             video_service,
         }
+    }
+
+    /// List all advertisements for a container.
+    pub async fn get_advertisements(&self, container_id: u32) -> Result<Vec<Advertisement>> {
+        self.advertisement_service
+            .list_advertisements_by_container(container_id)
+            .await
     }
 
     /// Get container by ID.
@@ -173,10 +180,17 @@ impl ContainerService {
         ))
     }
 
-    /// List all advertisements for a container.
-    pub async fn list_advertisements(&self, container_id: u32) -> Result<Vec<Advertisement>> {
-        self.advertisement_service
-            .list_advertisements_by_container(container_id)
+    /// List all images for a container.
+    pub async fn get_images(&self, container_id: u32) -> Result<Vec<Image>> {
+        self.image_service
+            .list_images_by_container(container_id)
+            .await
+    }
+
+    /// List all videos for a container.
+    pub async fn get_videos(&self, container_id: u32) -> Result<Vec<Video>> {
+        self.video_service
+            .list_videos_by_container(container_id)
             .await
     }
 
@@ -197,20 +211,6 @@ impl ContainerService {
             .collect();
 
         Ok(containers)
-    }
-
-    /// List all images for a container.
-    pub async fn list_images(&self, container_id: u32) -> Result<Vec<Image>> {
-        self.image_service
-            .list_images_by_container(container_id)
-            .await
-    }
-
-    /// List all videos for a container.
-    pub async fn list_videos(&self, container_id: u32) -> Result<Vec<Video>> {
-        self.video_service
-            .list_videos_by_container(container_id)
-            .await
     }
 
     /* ****************************** Private utility function ****************************** */
@@ -276,7 +276,7 @@ mod test {
         let container_id: u32 = 0;
 
         // When
-        let result: Result<Vec<Advertisement>> = under_test.list_advertisements(container_id).await;
+        let result: Result<Vec<Advertisement>> = under_test.get_advertisements(container_id).await;
 
         // Then
         match result {
@@ -308,7 +308,7 @@ mod test {
         let container_id: u32 = 0;
 
         // When
-        let result: Result<Vec<Image>> = under_test.list_images(container_id).await;
+        let result: Result<Vec<Image>> = under_test.get_images(container_id).await;
 
         // Then
         match result {
@@ -324,7 +324,7 @@ mod test {
         let container_id: u32 = 0;
 
         // When
-        let result: Result<Vec<Video>> = under_test.list_videos(container_id).await;
+        let result: Result<Vec<Video>> = under_test.get_videos(container_id).await;
 
         // Then
         match result {
