@@ -24,14 +24,8 @@ use crate::{
 /// [`video repository`][2] get converted into this type before being returned from the
 /// controller.
 ///
-/// # Examples
-///
-/// ```rust
-/// ```
-///
 /// [1]: [crate::repository::types::video::AssetReferenceDto]
 /// [2]: [crate::repository::video]
-///
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AssetReference {
@@ -75,14 +69,8 @@ impl Display for AssetReference {
 /// [`video repository`][2] get converted into this type before being returned from the
 /// controller.
 ///
-/// # Examples
-///
-/// ```rust
-/// ```
-///
 /// [1]: [crate::repository::types::video::VideoDto]
 /// [2]: [crate::repository::video]
-///
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Video {
@@ -178,11 +166,6 @@ impl Display for Video {
 /* **************************************** VideoBuilder **************************************** */
 
 /// Builder class for [Video].
-///
-/// # Examples
-///
-/// ```rust
-/// ```
 pub struct VideoBuilder {
     /// See [Video::assets].
     ///
@@ -389,11 +372,6 @@ pub type VideoMap = HashMap<u32, Vec<Video>>;
 ///
 /// [`VideoService`] is the service layer wrapper for [`VideoRepository`]. It transforms
 /// DTO types into domain types.
-///
-/// # Examples
-///
-/// ```rust
-/// ```
 #[derive(Default)]
 pub struct VideoService {
     /// Repository layer that the service calls.

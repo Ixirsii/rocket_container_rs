@@ -19,11 +19,6 @@ use crate::types::Result;
 /// [`advertisement repository`][2] get converted into this type before being returned from the
 /// controller.
 ///
-/// # Examples
-///
-/// ```rust
-/// ```
-///
 /// [1]: [crate::repository::types::advertisement::AdvertisementDto]
 /// [2]: [crate::repository::advertisement]
 ///
@@ -71,11 +66,6 @@ pub type AdvertisementMap = HashMap<u32, Vec<Advertisement>>;
 ///
 /// [`AdvertisementService`] is the service layer wrapper for [`AdvertisementRepository`]. It
 /// transforms DTO types into domain types.
-///
-/// # Examples
-///
-/// ```rust
-/// ```
 #[derive(Default)]
 pub struct AdvertisementService {
     /// Repository layer that the service calls.

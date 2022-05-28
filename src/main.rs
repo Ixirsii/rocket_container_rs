@@ -50,6 +50,18 @@ mod test {
     use super::rocket;
 
     #[test]
+    fn get_container() {
+        // Given
+        let client = Client::tracked(rocket()).expect("valid rocket instance");
+
+        // When
+        let response = client.get("/containers/0").dispatch();
+
+        // Then
+        assert_eq!(response.status(), Status::Ok);
+    }
+
+    #[test]
     fn get_advertisements() {
         // Given
         let client = Client::tracked(rocket()).expect("valid rocket instance");

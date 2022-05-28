@@ -17,11 +17,6 @@ use crate::{repository::image::ImageRepository, service::group, types::Result};
 /// [`image repository`][2] get converted into this type before being returned from the
 /// controller.
 ///
-/// # Examples
-///
-/// ```rust
-/// ```
-///
 /// [1]: [crate::repository::types::image::ImageDto]
 /// [2]: [crate::repository::image]
 ///
@@ -69,11 +64,6 @@ pub type ImageMap = HashMap<u32, Vec<Image>>;
 ///
 /// [`ImageService`] is the service layer wrapper for [`ImageRepository`]. It transforms
 /// DTO types into domain types.
-///
-/// # Examples
-///
-/// ```rust
-/// ```
 #[derive(Default)]
 pub struct ImageService {
     /// Repository layer that the service calls.

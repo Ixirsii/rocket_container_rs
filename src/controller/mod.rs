@@ -97,11 +97,11 @@ pub struct ErrorResponse {
 /// ```
 pub type Result<T> = std::result::Result<Json<T>, Error>;
 
-/* ***************************** GET /containers/<container_id>/ads ***************************** */
+/* ************************************** GET /containers *************************************** */
 
-/// GET /containers/<container_id>/ads.
+/// GET /containers.
 ///
-/// Controller for getting all advertisements for a container.
+/// Controller for getting all containers.
 ///
 /// # Examples
 ///
@@ -110,7 +110,7 @@ pub type Result<T> = std::result::Result<Json<T>, Error>;
 /// extern crate rocket;
 ///
 /// use rocket_container::{
-///     controller::get_advertisements,
+///     controller::list_containers,
 ///     service::container::ContainerService,
 /// };
 ///
@@ -120,33 +120,14 @@ pub type Result<T> = std::result::Result<Json<T>, Error>;
 ///
 ///     rocket::build()
 ///         .manage(container_service)
-///         .mount( "/", routes![get_advertisements])
+///         .mount("/", routes![list_containers])
 /// }
 /// ```
-#[get("/containers/<container_id>/ads")]
-pub async fn get_advertisements(
-    container_id: u32,
-    service: &State<ContainerService>,
-) -> Result<Vec<Advertisement>> {
-    trace!("GET /containers/{}/ads", container_id);
+#[get("/containers")]
+pub async fn list_containers(service: &State<ContainerService>) -> Result<Vec<Container>> {
+    trace!("GET /containers");
 
-    match service
-        .inner()
-        .list_advertisements_by_container(container_id)
-        .await
-    {
-        Ok(advertisements) => Ok(Json(advertisements)),
-        Err(error) => {
-            error!(
-                "Error while listing advertisements by container {} {}",
-                container_id, error
-            );
-
-            Err(Error::InternalServiceError(Json(ErrorResponse {
-                message: "No advertisements found for this container".to_string(),
-            })))
-        }
-    }
+    todo!("list_containers")
 }
 
 /* ****************************** GET /containers/<container_id> ******************************** */
@@ -182,7 +163,64 @@ pub async fn get_container(
 ) -> Result<Container> {
     trace!("GET /containers/{}", container_id);
 
-    todo!("get_container")
+    match service.inner().get_container(container_id).await {
+        Ok(container) => Ok(Json(container)),
+        Err(error) => {
+            error!("Error while getting container {} {}", container_id, error);
+
+            Err(Error::InternalServiceError(Json(ErrorResponse {
+                message: "Error getting container".to_string(),
+            })))
+        }
+    }
+}
+
+/* ***************************** GET /containers/<container_id>/ads ***************************** */
+
+/// GET /containers/<container_id>/ads.
+///
+/// Controller for getting all advertisements for a container.
+///
+/// # Examples
+///
+/// ```rust
+/// #[macro_use]
+/// extern crate rocket;
+///
+/// use rocket_container::{
+///     controller::get_advertisements,
+///     service::container::ContainerService,
+/// };
+///
+/// #[launch]
+/// pub fn rocket() -> _ {
+///     let container_service: ContainerService = ContainerService::default();
+///
+///     rocket::build()
+///         .manage(container_service)
+///         .mount( "/", routes![get_advertisements])
+/// }
+/// ```
+#[get("/containers/<container_id>/ads")]
+pub async fn get_advertisements(
+    container_id: u32,
+    service: &State<ContainerService>,
+) -> Result<Vec<Advertisement>> {
+    trace!("GET /containers/{}/ads", container_id);
+
+    match service.inner().list_advertisements(container_id).await {
+        Ok(advertisements) => Ok(Json(advertisements)),
+        Err(error) => {
+            error!(
+                "Error while listing advertisements by container {} {}",
+                container_id, error
+            );
+
+            Err(Error::InternalServiceError(Json(ErrorResponse {
+                message: "Error getting advertisements".to_string(),
+            })))
+        }
+    }
 }
 
 /* *************************** GET /containers/<container_id>/images **************************** */
@@ -255,37 +293,4 @@ pub async fn get_videos(
     trace!("GET /containers/{}/videos", container_id);
 
     todo!("get_videos")
-}
-
-/* ************************************** GET /containers *************************************** */
-
-/// GET /containers.
-///
-/// Controller for getting all containers.
-///
-/// # Examples
-///
-/// ```rust
-/// #[macro_use]
-/// extern crate rocket;
-///
-/// use rocket_container::{
-///     controller::list_containers,
-///     service::container::ContainerService,
-/// };
-///
-/// #[launch]
-/// pub fn rocket() -> _ {
-///     let container_service: ContainerService = ContainerService::default();
-///
-///     rocket::build()
-///         .manage(container_service)
-///         .mount("/", routes![list_containers])
-/// }
-/// ```
-#[get("/containers")]
-pub async fn list_containers(service: &State<ContainerService>) -> Result<Vec<Container>> {
-    trace!("GET /containers");
-
-    todo!("list_containers")
 }

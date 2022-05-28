@@ -38,12 +38,6 @@ pub struct Container {
 
 impl Container {
     /// Construct a new Container.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// todo!("Example");
-    /// ```
     pub fn new(
         ads: Vec<Advertisement>,
         id: u32,
@@ -61,12 +55,6 @@ impl Container {
     }
 
     /// Create a container from a list of advertisements, images, and videos.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// todo!("Example");
-    /// ```
     pub fn from(
         container_id: u32,
         advertisements: &[Advertisement],
@@ -133,11 +121,6 @@ impl Display for Container {
 ///
 /// Container service aggregates data from [`AdvertisementService`], [`ImageService`], and
 /// [`VideoService`] into containers by container ID.
-///
-/// # Examples
-///
-/// ```rust
-/// ```
 #[derive(Default)]
 pub struct ContainerService {
     /// Advertisement service.
@@ -163,11 +146,6 @@ impl ContainerService {
     }
 
     /// Get container by ID.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
     pub async fn get_container(&self, container_id: u32) -> Result<Container> {
         trace!("get_container: {}", container_id);
 
@@ -192,12 +170,14 @@ impl ContainerService {
         ))
     }
 
+    /// List all advertisements for a container.
+    pub async fn list_advertisements(&self, container_id: u32) -> Result<Vec<Advertisement>> {
+        self.advertisement_service
+            .list_advertisements_by_container(container_id)
+            .await
+    }
+
     /// Get all containers.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
     pub async fn list_containers(&self) -> Result<Vec<Container>> {
         trace!("list_containers");
 
@@ -216,17 +196,26 @@ impl ContainerService {
         Ok(containers)
     }
 
+    /// List all images for a container.
+    pub async fn list_images(&self, container_id: u32) -> Result<Vec<Image>> {
+        self.image_service
+            .list_images_by_container(container_id)
+            .await
+    }
+
+    /// List all videos for a container.
+    pub async fn list_videos(&self, container_id: u32) -> Result<Vec<Video>> {
+        self.video_service
+            .list_videos_by_container(container_id)
+            .await
+    }
+
     /* ****************************** Private utility function ****************************** */
 
     /// Build a container from data maps.
     ///
     /// Gets advertisements for a container from an [`AdvertisementMap`], images from an
     /// [`ImageMap`], and combines them with a list of videos to make a container.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// ```
     fn build_container(
         &self,
         container_id: u32,
@@ -254,6 +243,9 @@ impl ContainerService {
 
 #[cfg(test)]
 mod test {
+    use crate::service::advertisement::Advertisement;
+    use crate::service::image::Image;
+    use crate::service::video::Video;
     use crate::types::Result;
 
     use super::{Container, ContainerService};
@@ -275,6 +267,22 @@ mod test {
     }
 
     #[tokio::test]
+    async fn test_list_advertisements() {
+        // Given
+        let under_test = ContainerService::default();
+        let container_id: u32 = 0;
+
+        // When
+        let result: Result<Vec<Advertisement>> = under_test.list_advertisements(container_id).await;
+
+        // Then
+        match result {
+            Ok(_) => (),
+            Err(err) => panic!("Failed to get advertisements with error: {}", err),
+        }
+    }
+
+    #[tokio::test]
     async fn test_list_containers() {
         // Given
         let under_test = ContainerService::default();
@@ -287,6 +295,38 @@ mod test {
         match result {
             Ok(actual) => assert_eq!(expected, actual.len()),
             Err(err) => panic!("Failed to list containers with error: {}", err),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_list_images() {
+        // Given
+        let under_test = ContainerService::default();
+        let container_id: u32 = 0;
+
+        // When
+        let result: Result<Vec<Image>> = under_test.list_images(container_id).await;
+
+        // Then
+        match result {
+            Ok(_) => (),
+            Err(err) => panic!("Failed to get images with error: {}", err),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_list_videos() {
+        // Given
+        let under_test = ContainerService::default();
+        let container_id: u32 = 0;
+
+        // When
+        let result: Result<Vec<Video>> = under_test.list_videos(container_id).await;
+
+        // Then
+        match result {
+            Ok(_) => (),
+            Err(err) => panic!("Failed to get videos with error: {}", err),
         }
     }
 }
