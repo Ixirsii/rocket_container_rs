@@ -37,22 +37,11 @@ pub fn rocket() -> _ {
 fn get_container_service() -> ContainerService {
     let client: Arc<Client> = Arc::new(Client::default());
     let advertisement_service: AdvertisementService =
-        AdvertisementService::new(AdvertisementRepository::new(Arc::clone(&client)));
-    let image_service: ImageService = ImageService::new(ImageRepository::new(Arc::clone(&client)));
+        AdvertisementService::new(AdvertisementRepository::new(client.clone()));
+    let image_service: ImageService = ImageService::new(ImageRepository::new(client.clone()));
     let video_service: VideoService = VideoService::new(VideoRepository::new(client));
-    let container_service: ContainerService =
-        ContainerService::new(advertisement_service, image_service, video_service);
 
-    rocket::build().manage(container_service).mount(
-        "/",
-        routes![
-            get_advertisements,
-            get_container,
-            get_images,
-            get_videos,
-            list_containers
-        ],
-    )
+    ContainerService::new(advertisement_service, image_service, video_service)
 }
 
 /* ******************************************* Tests ******************************************** */
@@ -89,12 +78,12 @@ mod test {
     }
 
     #[test]
-    fn get_container() {
+    fn list_container() {
         // Given
         let client = Client::tracked(rocket()).expect("valid rocket instance");
 
         // When
-        let response = client.get("/containers/0").dispatch();
+        let response = client.get("/containers").dispatch();
 
         // Then
         assert_eq!(response.status(), Status::Ok);

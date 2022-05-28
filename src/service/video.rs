@@ -323,7 +323,7 @@ pub struct VideoService {
 }
 
 impl<'a> VideoService {
-    //// Create a new [`VideoService`].
+    /// Create a new [`VideoService`].
     pub fn new(video_repository: VideoRepository) -> Self {
         Self { video_repository }
     }

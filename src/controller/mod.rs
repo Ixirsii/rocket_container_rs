@@ -127,7 +127,16 @@ pub type Result<T> = std::result::Result<Json<T>, Error>;
 pub async fn list_containers(service: &State<ContainerService>) -> Result<Vec<Container>> {
     trace!("GET /containers");
 
-    todo!("list_containers")
+    match service.inner().list_containers().await {
+        Ok(containers) => Ok(Json(containers)),
+        Err(error) => {
+            error!("Error while getting containers {}", error);
+
+            Err(Error::InternalServiceError(Json(ErrorResponse {
+                message: "Error getting containers".to_string(),
+            })))
+        }
+    }
 }
 
 /* ****************************** GET /containers/<container_id> ******************************** */
