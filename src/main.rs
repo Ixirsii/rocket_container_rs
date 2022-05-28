@@ -100,4 +100,16 @@ mod test {
         // Then
         assert_eq!(response.status(), Status::Ok);
     }
+
+    #[test]
+    fn get_videos() {
+        // Given
+        let client = Client::tracked(rocket()).expect("valid rocket instance");
+
+        // When
+        let response = client.get("/containers/0/videos").dispatch();
+
+        // Then
+        assert_eq!(response.status(), Status::Ok);
+    }
 }

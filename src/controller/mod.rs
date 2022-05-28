@@ -313,5 +313,17 @@ pub async fn get_videos(
 ) -> Result<Vec<Video>> {
     trace!("GET /containers/{}/videos", container_id);
 
-    todo!("get_videos")
+    match service.inner().get_videos(container_id).await {
+        Ok(videos) => Ok(Json(videos)),
+        Err(error) => {
+            error!(
+                "Error while listing videos by container {} {}",
+                container_id, error
+            );
+
+            Err(Error::InternalServiceError(Json(ErrorResponse {
+                message: "Error getting videos".to_string(),
+            })))
+        }
+    }
 }
