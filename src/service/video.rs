@@ -24,17 +24,7 @@ use crate::{
 /// [`video repository`][2] get converted into this type before being returned from the
 /// controller.
 ///
-/// # Examples
-///
-/// ```rust
-/// use rocket_container::service::video::{AssetReference, VideoService};
-///
-/// let video_id: u32 = 1;
-/// let service: VideoService = VideoService::default();
-/// let assets: Vec<AssetReference> = service.list_asset_references(video_id).await?;
-/// ```
-///
-/// [1]: [crate::repository::video::AssetReferenceDto]
+/// [1]: [crate::repository::types::video::AssetReferenceDto]
 /// [2]: [crate::repository::video]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -79,17 +69,8 @@ impl Display for AssetReference {
 /// [`VideoRepository`] get converted into this type before being returned from the
 /// controller.
 ///
-/// # Examples
-///
-/// ```rust
-/// use rocket_container::service::video::{Video, VideoService};
-///
-/// let container_id: u32 = 1;
-/// let service: VideoService = VideoService::default();
-/// let videos: Vec<Video> = service.list_videos_by_container(container_id).await?;
-/// ```
-///
-/// [1]: [crate::repository::video::VideoDto]
+/// [1]: [crate::repository::types::video::VideoDto]
+/// [2]: [crate::repository::video]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Video {
@@ -335,16 +316,6 @@ pub type VideoMap = HashMap<u32, Vec<Video>>;
 ///
 /// [`VideoService`] is the service layer wrapper for [`VideoRepository`]. It transforms
 /// DTO types into domain types.
-///
-/// # Examples
-///
-/// ```rust
-/// use rocket_container::service::video::{Video, VideoService};
-///
-/// let video_id: u32 = 1;
-/// let service: VideoService = VideoService::default();
-/// let video: Video = service.get_video(video_id).await?;
-/// ```
 #[derive(Default)]
 pub struct VideoService {
     /// Repository layer that the service calls.

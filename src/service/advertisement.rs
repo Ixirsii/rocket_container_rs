@@ -19,18 +19,9 @@ use crate::types::Result;
 /// [`AdvertisementRepository`] get converted into this type before being returned from the
 /// controller.
 ///
-/// # Examples
+/// [1]: [crate::repository::types::advertisement::AdvertisementDto]
+/// [2]: [crate::repository::advertisement]
 ///
-/// ```rust
-/// use rocket_container::service::advertisement::{Advertisement, AdvertisementService};
-///
-/// let container_id: u32 = 1;
-/// let service: AdvertisementService = AdvertisementService::default();
-/// let advertisements: Vec<Advertisement> =
-///     service.list_advertisements_by_container(container_id).await?;
-/// ```
-///
-/// [1]: [rocket_container::repository::advertisement::AdvertisementDto]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Advertisement {
@@ -79,15 +70,6 @@ pub type AdvertisementMap = HashMap<u32, Vec<Advertisement>>;
 ///
 /// [`AdvertisementService`] is the service layer wrapper for [`AdvertisementRepository`]. It
 /// transforms DTO types into domain types.
-///
-/// # Examples
-///
-/// ```rust
-/// use rocket_container::service::advertisement::{AdvertisementMap, AdvertisementService};
-///
-/// let service: AdvertisementService = AdvertisementService::default();
-/// let advertisement_map: AdvertisementMap = service.list_advertisements().await?;
-/// ```
 #[derive(Default)]
 pub struct AdvertisementService {
     /// Repository layer that the service calls.

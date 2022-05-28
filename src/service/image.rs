@@ -17,17 +17,9 @@ use crate::{repository::image::ImageRepository, service::group, types::Result};
 /// [`ImageRepository`] get converted into this type before being returned from the
 /// controller.
 ///
-/// # Examples
+/// [1]: [crate::repository::types::image::ImageDto]
+/// [2]: [crate::repository::image]
 ///
-/// ```rust
-/// use rocket_container::service::image::{Image, ImageService};
-///
-/// let container_id: u32 = 1;
-/// let service: ImageService = ImageService::default();
-/// let containers: Vec<Image> = service.list_images_by_container(container_id).await?;
-/// ```
-///
-/// [1]: [crate::repository::image::ImageDto]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Image {
@@ -76,15 +68,6 @@ pub type ImageMap = HashMap<u32, Vec<Image>>;
 ///
 /// [`ImageService`] is the service layer wrapper for [`ImageRepository`]. It transforms
 /// DTO types into domain types.
-///
-/// # Examples
-///
-/// ```rust
-/// use rocket_container::service::image::{ImageMap, ImageService};
-///
-/// let service: ImageService = ImageService::default();
-/// let containers: ImageMap = service.list_images().await?;
-/// ```
 #[derive(Default)]
 pub struct ImageService {
     /// Repository layer that the service calls.

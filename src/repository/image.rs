@@ -3,6 +3,13 @@
 //! Rocket Container's dependencies (Rocket Advertisement, Rocket Image, and Rocket Video) all
 //! return lists wrapped in an object. The only "data transformation" that happens at this layer
 //! is that the lists are unwrapped and returned directly.
+//!
+//! # Types
+//!
+//! - [`ImageDto`]: Data Transfer Object for images returned from Rocket Image.
+//! - [`ImagesDto`]: Rocket Image returns a list of images wrapped in an object. [`ImagesDto`]
+//!   models the wrapper object and contains only a list of [`ImageDto`]s.
+//! - [`ImageRepository`]: Wrapper around [`Client`] which calls Rocket Image service.
 
 use std::{
     fmt::{Display, Formatter},
